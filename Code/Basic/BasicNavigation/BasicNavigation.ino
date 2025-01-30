@@ -53,8 +53,14 @@ void loop() {
 
 // Sensor utility functions
 
-updateSensorValues() {
-  isIRLeft = analogRead
+void updateSensorValues() {
+  isIRLeft = digitalRead(IRLeft);
+  isIRRight = digitalRead(IRRight);
+
+  digitalWrite(USSTrigger, 1);
+  delay(10);
+  digitalWrite(USSTrigger, 0);
+  USSDistance = (pulseIn(USSEcho, 1) / 2) * 0.03432;
 }
 
 
