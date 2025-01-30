@@ -1,14 +1,18 @@
 // Define parameters which need to be finetuned
 
-const int breakDuration = 20; // Durstion the robot waits to fully stop in ms
+const int breakDuration = 20; // Duration the robot waits to fully stop in ms
 
-const int drivingSpeed = 0; // in analog write value (0-255)
+const short drivingSpeed = 0; // in analog write value (0-255)
+const short slowDrivingSpeed = 0; // in analog write value (0-255)
+
+const short USSStopThreshold = 0; // in cm
+const short USSSlowdownThreshold = 0; // in cm
 
 // Turning parameters
 const short turnAutherWheelSpeed = 0; // in analog write value (0-255)
 const short turnInnerWheelSpeed = 0; // in analog write value (0-255)
-const int turn90DegreeDuration = 0;// in ms 
-const int turn10DegreeDuration = 0;// in ms 
+const int turn90DegreeDuration = 0; // in ms 
+const int turn10DegreeDuration = 0; // in ms 
 
 
 // Define pins
@@ -17,7 +21,6 @@ const int turn10DegreeDuration = 0;// in ms
 const short motorLeftSpeed = 0; // ENA
 const short motorLeftForward = 0; // IN1
 const short motorLeftBackward = 0; // IN2
-
 const short motorRightSpeed = 0; // ENB
 const short motorRightForward = 0; // IN3
 const short motorRightBackward = 0; // IN4
@@ -27,26 +30,67 @@ const short IRLeft = 0;
 const short IRRight = 0;
 
 // Define ultrasonic sensor pins
-const short USSTrigger = 0;
 const short USSEcho = 0;
+const short USSTrigger = 0;
 
 
 // Define variables
-
 bool isIRLeft, isIRRight;
 int USSDistance;
 
 
-
 void setup() {
+  pinMode(IRLeft, INPUT);
+  pinMode(IRRight, INPUT);
+  pinMode(USSEcho, INPUT);
+  pinMode(USSTrigger, OUTPUT);
 
+  pinMode(motorLeftSpeed, OUTPUT);
+  pinMode(motorLeftForward, OUTPUT);
+  pinMode(motorLeftBackward, OUTPUT);
+  pinMode(motorRightSpeed, OUTPUT);
+  pinMode(motorRightForward, OUTPUT);
+  pinMode(motorRightBackward, OUTPUT);
+
+  Serial.begin(9600);
 }
 
 void loop() {
+  updateSensorValues();
 
+  if (isIRLeft || isIRRight || USSDistance <= USSStopThreshold) {
+    if (isIRLeft) {
+      turn(false, true);
+    } else if (isIRRight) {
+      turn(false, false);
+    } else {
+      turnToFurthestDirection();
+    }
+  } else if (USSDistance <= USSSlowdownThreshold) {
+    drive(slowDrivingSpeed, true);
+  } else {
+    drive(drivingSpeed, true);
+  }
 }
 
 
+// Functions
+
+void turnToFurthestDirection() {
+  turn(true, false);
+  updateSensorValues();
+  const short distanceLeft = USSDistance;
+
+  turn(true, true);
+  turn(true, true);
+  updateSensorValues();
+  const short distanceRight = USSDistance;
+
+  if (distanceLeft > distanceRight) {
+    turn(true, false);
+    turn(true, false);
+  }
+}
 
 
 // Utility functions
