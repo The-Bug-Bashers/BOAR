@@ -2,40 +2,41 @@
 
 const int breakDuration = 20; // Duration the robot waits to fully stop in ms
 
-const short drivingSpeed = 0; // in analog write value (0-255)
-const short slowDrivingSpeed = 0; // in analog write value (0-255)
+const short drivingSpeed = 255; // in analog write value (0-255)
+const short slowDrivingSpeed = 100; // in analog write value (0-255)
 
-const short USSStopThreshold = 0; // in cm
-const short USSSlowdownThreshold = 0; // in cm
+const short USSStopThreshold = 10; // in cm
+const short USSSlowdownThreshold = 20; // in cm
 
 // Turning parameters
-const short turnAutherWheelSpeed = 0; // in analog write value (0-255)
-const short turnInnerWheelSpeed = 0; // in analog write value (0-255)
-const int turn90DegreeDuration = 0; // in ms 
-const int turn10DegreeDuration = 0; // in ms 
+const short turnOuterWheelSpeed = 255; // in analog write value (0-255)
+const short turnInnerWheelSpeed = 100; // in analog write value (0-255)
+const int turn90DegreeDuration = 500; // in ms
+const int turn10DegreeDuration = 100; // in ms
 
 
 // Define pins
 
 // Define motor pins
-const short motorLeftSpeed = 0; // ENA
-const short motorLeftForward = 0; // IN1
-const short motorLeftBackward = 0; // IN2
-const short motorRightSpeed = 0; // ENB
-const short motorRightForward = 0; // IN3
-const short motorRightBackward = 0; // IN4
+const int motorLeftSpeed = 5; // ENA
+const int motorLeftForward = 12; // IN1
+const int motorLeftBackward = 2; // IN2
+const int motorRightSpeed = 6; // ENB
+const int motorRightForward = 3; // IN3
+const int motorRightBackward = 4; // IN4
 
 // Define infrared sensor pins
-const short IRLeft = 0;
-const short IRRight = 0;
+#define IRLeft 9
+#define IRRight 10
 
 // Define ultrasonic sensor pins
-const short USSEcho = 0;
-const short USSTrigger = 0;
+#define USSEcho A1
+#define USSTrigger 11
 
 
 // Define variables
 bool isIRLeft, isIRRight;
+short forwardDrivingSpeed; // 0 = not driving forward, 1 = Slowly forward, 2 = Fast forward
 int USSDistance;
 
 
@@ -57,20 +58,43 @@ void setup() {
 
 void loop() {
   updateSensorValues();
+  Serial.print("Sensor values: IRL: ");
+  Serial.print(isIRLeft);
+  Serial.print(" IRR: ");
+  Serial.print(isIRRight);
+  Serial.print(" SSS: ");
+    Serial.println(USSDistance);
+
 
   if (isIRLeft || isIRRight || USSDistance <= USSStopThreshold) {
     if (isIRLeft) {
+      Serial.println("Turning slightly Left");
+      forwardDrivingSpeed = 0;
       turn(false, true);
     } else if (isIRRight) {
+      Serial.println("Turning slightly Right");
+      forwardDrivingSpeed = 0;
       turn(false, false);
     } else {
+      Serial.println("Turning to furthest direction");
+      forwardDrivingSpeed = 0;
       turnToFurthestDirection();
     }
   } else if (USSDistance <= USSSlowdownThreshold) {
-    drive(slowDrivingSpeed, true);
+    if (forwardDrivingSpeed != 1) {
+      Serial.println("Driving Slow");
+      drive(slowDrivingSpeed, true);
+      forwardDrivingSpeed = 1;
+    }
   } else {
-    drive(drivingSpeed, true);
+    if (forwardDrivingSpeed != 2) {
+      Serial.println("Driving Fast");    
+      forwardDrivingSpeed = 2;
+      drive(drivingSpeed, true);
+    }
   }
+
+  delay(500);
 }
 
 
@@ -98,8 +122,8 @@ void turnToFurthestDirection() {
 // Sensor utility functions
 
 void updateSensorValues() {
-  isIRLeft = digitalRead(IRLeft);
-  isIRRight = digitalRead(IRRight);
+  isIRLeft = digitalRead(IRLeft) ? 0 : 1;
+  isIRRight = digitalRead(IRRight) ? 0 : 1;
 
   digitalWrite(USSTrigger, 1);
   delay(10);
@@ -153,7 +177,7 @@ void turn(bool turn90Degre, bool turnRight) {
   breakMotors();
 
   analogWrite(innerMotorSpeed, turnInnerWheelSpeed);
-  analogWrite(autherMotorSpeed, turnAutherWheelSpeed);
+  analogWrite(autherMotorSpeed, turnOuterWheelSpeed);
   digitalWrite(innerMotorDirection, 1);
   digitalWrite(autherMotorDirection, 1);
 
