@@ -2,7 +2,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class RPLidarReader {
+public class DisplayFrontLidarDistanceOnArduinoSerialMonitor {
     private static final String LIDAR_PORT = "/dev/ttyUSB0";  // USB port for RPLIDAR
     private static final String ARDUINO_PORT = "/dev/serial1"; // UART to Arduino
 
