@@ -1,9 +1,16 @@
 # BOAR
 Basic Obstacle Avoidance Robot
 
+# Dependencies
+- "jSerialComm" is required on the RasberryPi to communicate with the arduino (run `wget https://github.com/Fazecast/jSerialComm/releases/download/v2.6.2/jSerialComm-2.6.2.jar
+` to install)
+
 # Parts
 ## Lidar ([RPLIDAR A1M8](https://www.slamtec.com/en/lidar/a1))
 [SDK and Documentation](https://www.slamtec.com/en/support#rplidar-a-series)
+
+### Verrify conection to RasberryPi
+To verrify, that the lidar is connected to the RasberryPi you can run `ls /dev/ttyUSB*` this should display somthing like: `/dev/ttyUSB0`
 
 ### Displaying current data on windows machienes
 To connect the Lidar to a Windows machine, you need to install the drivers, and then start the program.
