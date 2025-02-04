@@ -1,4 +1,4 @@
-// Define parameters which need to be finetuned
+// Define parameters which need to be fine tuned
 
 const int breakDuration = 20; // Duration the robot waits to fully stop in ms
 
@@ -13,6 +13,8 @@ const short turnOuterWheelSpeed = 255; // in analog write value (0-255)
 const short turnInnerWheelSpeed = 100; // in analog write value (0-255)
 const int turn90DegreeDuration = 500; // in ms
 const int turn10DegreeDuration = 100; // in ms
+
+const int delayUntilNextScanningCycle = 500 // in ms
 
 
 // Define pins
@@ -80,12 +82,10 @@ void loop() {
       forwardDrivingSpeed = 0;
       turnToFurthestDirection();
     }
-  } else if (USSDistance <= USSSlowdownThreshold) {
-    if (forwardDrivingSpeed != 1) {
-      Serial.println("Driving Slow");
-      drive(slowDrivingSpeed, true);
-      forwardDrivingSpeed = 1;
-    }
+  } else if (USSDistance <= USSSlowdownThreshold && forwardDrivingSpeed != 1) {
+    Serial.println("Driving Slow");
+    drive(slowDrivingSpeed, true);
+    forwardDrivingSpeed = 1;
   } else {
     if (forwardDrivingSpeed != 2) {
       Serial.println("Driving Fast");    
@@ -94,7 +94,7 @@ void loop() {
     }
   }
 
-  delay(500);
+  delay(delayUntilNextScanningCycle);
 }
 
 
