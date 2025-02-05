@@ -45,4 +45,27 @@ public class LiDARService {
         }
         serialPort.writeBytes(command, command.length);
     }
+
+    private int parseDistance(byte[] data) {
+        return ((data[3] & 0xFF) | ((data[4] & 0xFF) << 8)) / 4; // LiDAR distance parsing logic
+    }
+
+    public int getFrontDistance() {
+        if (!serialPort.isOpen()) return -1;
+
+        InputStream inputStream = serialPort.getInputStream();
+        byte[] buffer = new byte[9];
+        try {
+            int readBytes = inputStream.read(buffer);
+            if (readBytes > 0) {
+                return parseDistance(buffer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+
+
 }
