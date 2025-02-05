@@ -42,6 +42,14 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                     stopDistanceStreaming();
                     session.sendMessage(new TextMessage("{\"message\": \"Distance streaming stopped\"}"));
                     break;
+                case "mstart":
+                    session.sendMessage(new TextMessage("{\"message\": \"Motor started\"}"));
+                    lidarService.startMotor();
+                    break;
+                case "mstop":
+                    session.sendMessage(new TextMessage("{\"message\": \"Motor stopped\"}"));
+                    lidarService.stopMotor();
+                    break;
                 default:
                     session.sendMessage(new TextMessage("{\"error\": \"Unknown command\"}"));
             }

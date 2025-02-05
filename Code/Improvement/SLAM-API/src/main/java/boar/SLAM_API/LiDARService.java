@@ -65,7 +65,4 @@ public class LiDARService {
         }
         return -1;
     }
-
-
-
 }
