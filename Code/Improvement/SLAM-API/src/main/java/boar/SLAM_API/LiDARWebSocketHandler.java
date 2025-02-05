@@ -28,7 +28,7 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                     break;
                 case "stop":
                     lidarService.stopScanning();
-                    if (scheduler != null) scheduler.shutdown();
+                    stopDistanceStreaming();
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
                     break;
                 case "dstart":
@@ -37,6 +37,10 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                         scheduler.scheduleAtFixedRate(() -> sendDistance(session), 0, 1, TimeUnit.SECONDS);
                     }
                     session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
+                    break;
+                case "dstop": // ✅ New command to stop distance streaming
+                    stopDistanceStreaming();
+                    session.sendMessage(new TextMessage("{\"message\": \"Distance streaming stopped\"}"));
                     break;
                 default:
                     session.sendMessage(new TextMessage("{\"error\": \"Unknown command\"}"));
@@ -53,6 +57,13 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"distance_cm\": " + frontDistance + "}"));
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void stopDistanceStreaming() {
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+            scheduler = null;
         }
     }
 }
