@@ -16,34 +16,34 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
     private ScheduledExecutorService scheduler;
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        session.sendMessage(new TextMessage("{\"message\": \"Connected to LiDAR WebSocket\"}"));
-    }
-
-    @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        JsonNode jsonNode = objectMapper.readTree(message.getPayload());
-        String command = jsonNode.get("command").asText();
+        try {
+            JsonNode jsonNode = objectMapper.readTree(message.getPayload());
+            String command = jsonNode.get("command").asText();
 
-        switch (command) {
-            case "start":
-                lidarService.startScanning();
-                session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning started\"}"));
-                break;
-            case "stop":
-                lidarService.stopScanning();
-                if (scheduler != null) scheduler.shutdown();
-                session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
-                break;
-            case "dstart":
-                if (scheduler == null || scheduler.isShutdown()) {
-                    scheduler = Executors.newSingleThreadScheduledExecutor();
-                    scheduler.scheduleAtFixedRate(() -> sendDistance(session), 0, 1, TimeUnit.SECONDS);
-                }
-                session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
-                break;
-            default:
-                session.sendMessage(new TextMessage("{\"error\": \"Unknown command\"}"));
+            switch (command) {
+                case "start":
+                    lidarService.startScanning();
+                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning started\"}"));
+                    break;
+                case "stop":
+                    lidarService.stopScanning();
+                    if (scheduler != null) scheduler.shutdown();
+                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
+                    break;
+                case "dstart":
+                    if (scheduler == null || scheduler.isShutdown()) {
+                        scheduler = Executors.newSingleThreadScheduledExecutor();
+                        scheduler.scheduleAtFixedRate(() -> sendDistance(session), 0, 1, TimeUnit.SECONDS);
+                    }
+                    session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
+                    break;
+                default:
+                    session.sendMessage(new TextMessage("{\"error\": \"Unknown command\"}"));
+            }
+        } catch (Exception e) {
+            session.sendMessage(new TextMessage("{\"error\": \"Internal server error: " + e.getMessage() + "\"}"));
+            e.printStackTrace();
         }
     }
 

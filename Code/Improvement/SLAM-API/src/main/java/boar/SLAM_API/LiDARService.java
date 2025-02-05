@@ -7,20 +7,23 @@ public class LiDARService {
     private SerialPort serialPort;
 
     public LiDARService() {
-        serialPort = SerialPort.getCommPort("/dev/ttyUSB0"); // Adjust for your setup
+        serialPort = SerialPort.getCommPort("/dev/ttyUSB0"); // Adjust if needed
         serialPort.setBaudRate(115200);
     }
 
     public void startScanning() {
         if (!serialPort.isOpen()) {
-            serialPort.openPort();
+            boolean success = serialPort.openPort();
+            if (!success) {
+                throw new RuntimeException("Failed to open serial port!");
+            }
         }
         sendCommand((byte) 0xA5, (byte) 0x60); // LiDAR Start Scan Command
     }
 
     public void stopScanning() {
-        sendCommand((byte) 0xA5, (byte) 0x65); // LiDAR Stop Scan Command
         if (serialPort.isOpen()) {
+            sendCommand((byte) 0xA5, (byte) 0x65); // LiDAR Stop Scan Command
             serialPort.closePort();
         }
     }
@@ -42,7 +45,10 @@ public class LiDARService {
     }
 
     private void sendCommand(byte... command) {
-        if (!serialPort.isOpen()) return;
+        if (!serialPort.isOpen()) {
+            System.err.println("Error: Serial port is not open!");
+            return;
+        }
         serialPort.writeBytes(command, command.length);
     }
 
