@@ -18,12 +18,12 @@ public class LiDARService {
                 throw new RuntimeException("Failed to open serial port!");
             }
         }
-        serialPort.setDTR();  // ✅ Correctly enables motor
+        serialPort.clearDTR();  // ✅ Correctly enables motor
     }
 
     public void stopMotor() {
         if (serialPort.isOpen()) {
-            serialPort.clearDTR();  // ✅ Correctly stops motor
+            serialPort.setDTR();  // ✅ Correctly stops motor
             serialPort.closePort();
         }
     }
