@@ -7,16 +7,10 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.net.PortUnreachableException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 public class LiDARWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     final LiDARService lidarService = new LiDARService();
-    private ScheduledExecutorService scheduler;
-    private static boolean scanning = false;
+    // Instead of a ScheduledExecutorService, we use a dedicated thread.
     private Thread streamingThread;
     private volatile boolean streaming = false;
 
@@ -28,16 +22,22 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
 
             switch (command) {
                 case "startScann":
-                    if (scanning) {session.sendMessage(new TextMessage("{\"error\": \"Already scanning!\"}")); break;}
+                    if (streaming) {
+                        session.sendMessage(new TextMessage("{\"error\": \"Already scanning!\"}"));
+                        break;
+                    }
                     lidarService.startScanning();
-                    scanning = true;
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning started\"}"));
                     break;
                 case "stopScann":
-                    if (!scanning) {session.sendMessage(new TextMessage("{\"error\": \"No active scann to stop!\"}")); break;}
+                    if (!streaming) {
+                        session.sendMessage(new TextMessage("{\"error\": \"No active scan to stop!\"}"));
+                        break;
+                    }
                     lidarService.stopScanning();
+                    // Also stop the streaming thread if running.
                     stopDistanceStreaming();
-                    scanning = false;
+                    streaming = false;
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
                     break;
                 case "startStreamFrontDistance":
@@ -46,9 +46,10 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                         streamingThread = new Thread(() -> {
                             while (streaming && session.isOpen()) {
                                 try {
-                                    // This call blocks until a new full rotation is processed.
+                                    // This call will block until a full rotation is complete and a valid front distance is obtained.
                                     int frontDistance = lidarService.getFrontDistance();
-                                    session.sendMessage(new TextMessage("{\"distance_cm\": " + frontDistance + "}"));
+                                    // Send the distance (in mm) as a JSON message.
+                                    session.sendMessage(new TextMessage("{\"distance_mm\": " + frontDistance + "}"));
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -80,19 +81,11 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void streamDistance(WebSocketSession session) {
-        try {
-            int frontDistance = lidarService.getFrontDistance();
-            session.sendMessage(new TextMessage("{\"distance_cm\": " + frontDistance + "}"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private void stopDistanceStreaming() {
-        if (scheduler != null && !scheduler.isShutdown()) {
-            scheduler.shutdown();
-            scheduler = null;
+        streaming = false;
+        if (streamingThread != null && streamingThread.isAlive()) {
+            streamingThread.interrupt();
+            streamingThread = null;
         }
     }
 }

@@ -2,17 +2,16 @@ package boar.SLAM_API;
 
 import com.fazecast.jSerialComm.SerialPort;
 import java.io.InputStream;
-import java.net.PortUnreachableException;
 
 public class LiDARService {
     private final SerialPort serialPort;
 
     public LiDARService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
-        if (!serialPort.openPort()) {throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");}
-
+        if (!serialPort.openPort()) {
+            throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
+        }
         serialPort.setBaudRate(115200);
-
         openSerialPort();
         stopMotor();
     }
@@ -40,7 +39,6 @@ public class LiDARService {
         } else {
             throw new IllegalStateException("Can not start scanning without open port");
         }
-
     }
 
     public void stopScanning() {
@@ -69,60 +67,60 @@ public class LiDARService {
         }
     }
 
-    private int parseDistance(byte[] data) {
-        return ((data[3] & 0xFF) | ((data[4] & 0xFF) << 8)) / 4; // LiDAR distance parsing logic
-    }
-
+    // Updated getFrontDistance method:
     public int getFrontDistance() {
         if (!serialPort.isOpen()) return -1;
 
         InputStream inputStream = serialPort.getInputStream();
         byte[] buffer = new byte[5];
         int bestDistance = -1;
-        // This flag will become true after the very first scan start is seen.
         boolean firstScanStarted = false;
+        // Broaden the acceptable front angle range: accept angles ≥350° OR ≤10°
+        float lowerAngleBound = 350.0f;
+        float upperAngleBound = 10.0f;
 
-        // Instead of timing out after 1 second, wait until a full rotation is complete.
         while (true) {
             try {
                 if (inputStream.available() >= 5) {
                     int readBytes = inputStream.read(buffer);
                     if (readBytes == 5) {
-                        // The first byte (quality byte) contains the "start flag" (S).
-                        // (Assuming the flag is stored in bit 0, as many examples do.)
+                        // The first byte is the quality byte. We assume bit 0 holds the "start flag".
                         boolean newScan = (buffer[0] & 0x01) != 0;
 
-                        // Correctly extract the angle in Q6 fixed-point format.
+                        // Correctly extract the angle using Q6 fixed point (divide by 64.0)
                         int angleRaw = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8));
-                        float angle = angleRaw / 64.0f;  // Correct conversion to degrees
+                        float angle = angleRaw / 64.0f;  // angle in degrees
 
-                        // Extract distance in mm (the protocol specifies division by 4)
+                        // Extract the distance (protocol: divide raw by 4)
                         int distanceRaw = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8));
                         int distance = distanceRaw / 4;
 
-                        // When we detect a new scan and if we already have been in a scan cycle,
-                        // then we assume the previous rotation is complete.
+                        // Debug logging – print out the measurement data
+                        System.out.println("Raw measurement: angle=" + angle + "°, distance=" + distance + " mm, newScan=" + newScan);
+
+                        // If a new scan is detected, and we've already started one, then return the best result.
                         if (newScan) {
                             if (firstScanStarted) {
-                                // If we found any valid front measurement in the last rotation, return it.
                                 if (bestDistance != -1) {
+                                    System.out.println("Returning best front distance: " + bestDistance + " mm");
                                     return bestDistance;
                                 }
-                                // Otherwise, reset and continue scanning.
+                                // Otherwise, reset bestDistance for the new scan.
                                 bestDistance = -1;
                             }
                             firstScanStarted = true;
                         }
 
-                        // If the measurement is from the front (angle near 0°)
-                        if (angle >= 355.0f || angle <= 5.0f) {
+                        // Check if the measurement is from the "front":
+                        // Accept if the angle is >= lower bound or <= upper bound.
+                        if (angle >= lowerAngleBound || angle <= upperAngleBound) {
                             if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
                                 bestDistance = distance;
+                                System.out.println("Updated best front distance: " + bestDistance + " mm");
                             }
                         }
                     }
                 } else {
-                    // Sleep briefly to avoid busy-waiting.
                     Thread.sleep(1);
                 }
             } catch (Exception e) {
@@ -131,9 +129,4 @@ public class LiDARService {
             }
         }
     }
-
-
-
-
-
 }
