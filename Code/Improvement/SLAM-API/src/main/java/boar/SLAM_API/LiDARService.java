@@ -77,15 +77,32 @@ public class LiDARService {
         if (!serialPort.isOpen()) return -1;
 
         InputStream inputStream = serialPort.getInputStream();
-        byte[] buffer = new byte[9];
+        byte[] buffer = new byte[5]; // Read 5 bytes per point
+        int frontDistance = -1;
+        double closestAngle = 360; // Start with max angle
+
         try {
-            int readBytes = inputStream.read(buffer);
-            if (readBytes > 0) {
-                return parseDistance(buffer);
+            while (inputStream.available() > 0) {
+                int readBytes = inputStream.read(buffer);
+                if (readBytes == 5) {
+                    boolean isNewScan = (buffer[0] & 0x01) != 0;
+                    boolean isValid = (buffer[0] & 0x02) != 0;
+                    double angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) / 64.0;
+                    int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4; // mm to cm
+
+                    if (isNewScan && isValid) {
+                        // Find the closest angle to 0°
+                        if (Math.abs(angle) < closestAngle) {
+                            closestAngle = Math.abs(angle);
+                            frontDistance = distance;
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return -1;
+        return frontDistance;
     }
+
 }
