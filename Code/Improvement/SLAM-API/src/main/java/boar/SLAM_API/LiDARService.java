@@ -84,13 +84,19 @@ public class LiDARService {
             int bestDistance = -1;
 
             while (System.currentTimeMillis() - startTime < 1000) {  // Timeout after 1 second
-                if (inputStream.available() >= 5) {  // Check if data is available
+                if (inputStream.available() >= 5) {  // Ensure we have enough bytes
                     int readBytes = inputStream.read(buffer);
                     if (readBytes == 5) {
-                        int angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) >> 6;  // Extract angle
-                        int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4;  // Extract distance
+                        // Correctly extract the angle
+                        int angleRaw = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8));
+                        float angle = (angleRaw >> 6) * 0.01f;  // Convert to degrees
 
-                        if (angle >= 355 || angle <= 5) {  // Front-facing data
+                        // Correctly extract the distance
+                        int distanceRaw = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8));
+                        int distance = (distanceRaw / 4);  // Distance in mm
+
+                        // Check if this reading is from the front (angle ~0°)
+                        if (angle >= 355 || angle <= 5) {
                             if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
                                 bestDistance = distance;
                             }
@@ -107,6 +113,7 @@ public class LiDARService {
         }
         return -1;
     }
+
 
 
 
