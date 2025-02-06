@@ -13,6 +13,7 @@ public class LiDARService {
 
         serialPort.setBaudRate(115200);
 
+        openSerialPort();
         stopMotor();
     }
 
