@@ -17,6 +17,8 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
     final LiDARService lidarService = new LiDARService();
     private ScheduledExecutorService scheduler;
     private static boolean scanning = false;
+    private Thread streamingThread;
+    private volatile boolean streaming = false;
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -39,19 +41,33 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
                     break;
                 case "startStreamFrontDistance":
-                    if (scheduler == null || scheduler.isShutdown()) {
-                        scheduler = Executors.newSingleThreadScheduledExecutor();
-                        scheduler.scheduleAtFixedRate(() -> streamDistance(session), 0, 1, TimeUnit.SECONDS);
+                    if (!streaming) {
+                        streaming = true;
+                        streamingThread = new Thread(() -> {
+                            while (streaming && session.isOpen()) {
+                                try {
+                                    // This call blocks until a new full rotation is processed.
+                                    int frontDistance = lidarService.getFrontDistance();
+                                    session.sendMessage(new TextMessage("{\"distance_cm\": " + frontDistance + "}"));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        streamingThread.start();
                         session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
                     } else {
                         session.sendMessage(new TextMessage("{\"error\": \"Already streaming front distance!\"}"));
                     }
                     break;
                 case "stopStreamFrontDistance":
-                    if (scheduler != null && !scheduler.isShutdown()) {
-                        stopDistanceStreaming();
+                    if (streaming) {
+                        streaming = false;
+                        if (streamingThread != null) {
+                            streamingThread.interrupt();
+                        }
                         session.sendMessage(new TextMessage("{\"message\": \"Distance streaming stopped\"}"));
-                    }  else {
+                    } else {
                         session.sendMessage(new TextMessage("{\"error\": \"Not streaming distance!\"}"));
                     }
                     break;

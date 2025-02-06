@@ -78,41 +78,60 @@ public class LiDARService {
 
         InputStream inputStream = serialPort.getInputStream();
         byte[] buffer = new byte[5];
+        int bestDistance = -1;
+        // This flag will become true after the very first scan start is seen.
+        boolean firstScanStarted = false;
 
-        try {
-            long startTime = System.currentTimeMillis();
-            int bestDistance = -1;
-
-            while (System.currentTimeMillis() - startTime < 1000) {  // Timeout after 1 second
-                if (inputStream.available() >= 5) {  // Ensure we have enough bytes
+        // Instead of timing out after 1 second, wait until a full rotation is complete.
+        while (true) {
+            try {
+                if (inputStream.available() >= 5) {
                     int readBytes = inputStream.read(buffer);
                     if (readBytes == 5) {
-                        // Correctly extract the angle
+                        // The first byte (quality byte) contains the "start flag" (S).
+                        // (Assuming the flag is stored in bit 0, as many examples do.)
+                        boolean newScan = (buffer[0] & 0x01) != 0;
+
+                        // Correctly extract the angle in Q6 fixed-point format.
                         int angleRaw = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8));
-                        float angle = angleRaw / 64.0f;  // Convert to degrees
+                        float angle = angleRaw / 64.0f;  // Correct conversion to degrees
 
-                        // Correctly extract the distance
+                        // Extract distance in mm (the protocol specifies division by 4)
                         int distanceRaw = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8));
-                        int distance = (distanceRaw / 4);  // Distance in mm
+                        int distance = distanceRaw / 4;
 
-                        // Check if this reading is from the front (angle ~0°)
-                        if (angle >= 355 || angle <= 5) {
+                        // When we detect a new scan and if we already have been in a scan cycle,
+                        // then we assume the previous rotation is complete.
+                        if (newScan) {
+                            if (firstScanStarted) {
+                                // If we found any valid front measurement in the last rotation, return it.
+                                if (bestDistance != -1) {
+                                    return bestDistance;
+                                }
+                                // Otherwise, reset and continue scanning.
+                                bestDistance = -1;
+                            }
+                            firstScanStarted = true;
+                        }
+
+                        // If the measurement is from the front (angle near 0°)
+                        if (angle >= 355.0f || angle <= 5.0f) {
                             if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
                                 bestDistance = distance;
                             }
                         }
                     }
                 } else {
-                    Thread.sleep(10);  // Avoid CPU overuse, wait for data
+                    // Sleep briefly to avoid busy-waiting.
+                    Thread.sleep(1);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                return -1;
             }
-
-            return bestDistance;
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return -1;
     }
+
 
 
 
