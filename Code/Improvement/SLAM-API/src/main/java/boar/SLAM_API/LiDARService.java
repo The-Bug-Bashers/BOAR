@@ -77,29 +77,37 @@ public class LiDARService {
         if (!serialPort.isOpen()) return -1;
 
         InputStream inputStream = serialPort.getInputStream();
-        byte[] buffer = new byte[5];  // LiDAR packets are usually 5 bytes per measurement
+        byte[] buffer = new byte[5];
+
         try {
+            long startTime = System.currentTimeMillis();
             int bestDistance = -1;
-            int readBytes;
 
-            while ((readBytes = inputStream.read(buffer)) > 0) {
-                if (readBytes == 5) {  // Ensure full packet
-                    int angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) >> 6; // Extract angle
-                    int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4; // Extract distance
+            while (System.currentTimeMillis() - startTime < 1000) {  // Timeout after 1 second
+                if (inputStream.available() >= 5) {  // Check if data is available
+                    int readBytes = inputStream.read(buffer);
+                    if (readBytes == 5) {
+                        int angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) >> 6;  // Extract angle
+                        int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4;  // Extract distance
 
-                    if (angle >= 355 || angle <= 5) {  // Front-facing data
-                        if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
-                            bestDistance = distance;
+                        if (angle >= 355 || angle <= 5) {  // Front-facing data
+                            if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
+                                bestDistance = distance;
+                            }
                         }
                     }
+                } else {
+                    Thread.sleep(10);  // Avoid CPU overuse, wait for data
                 }
             }
+
             return bestDistance;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return -1;
     }
+
 
 
 }
