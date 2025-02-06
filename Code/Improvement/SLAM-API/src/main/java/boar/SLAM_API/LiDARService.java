@@ -77,32 +77,29 @@ public class LiDARService {
         if (!serialPort.isOpen()) return -1;
 
         InputStream inputStream = serialPort.getInputStream();
-        byte[] buffer = new byte[5]; // Read 5 bytes per point
-        int frontDistance = -1;
-        double closestAngle = 360; // Start with max angle
-
+        byte[] buffer = new byte[5];  // LiDAR packets are usually 5 bytes per measurement
         try {
-            while (inputStream.available() > 0) {
-                int readBytes = inputStream.read(buffer);
-                if (readBytes == 5) {
-                    boolean isNewScan = (buffer[0] & 0x01) != 0;
-                    boolean isValid = (buffer[0] & 0x02) != 0;
-                    double angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) / 64.0;
-                    int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4; // mm to cm
+            int bestDistance = -1;
+            int readBytes;
 
-                    if (isNewScan && isValid) {
-                        // Find the closest angle to 0°
-                        if (Math.abs(angle) < closestAngle) {
-                            closestAngle = Math.abs(angle);
-                            frontDistance = distance;
+            while ((readBytes = inputStream.read(buffer)) > 0) {
+                if (readBytes == 5) {  // Ensure full packet
+                    int angle = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8)) >> 6; // Extract angle
+                    int distance = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8)) / 4; // Extract distance
+
+                    if (angle >= 355 || angle <= 5) {  // Front-facing data
+                        if (distance > 0 && (bestDistance == -1 || distance < bestDistance)) {
+                            bestDistance = distance;
                         }
                     }
                 }
             }
+            return bestDistance;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return frontDistance;
+        return -1;
     }
+
 
 }
