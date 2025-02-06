@@ -18,7 +18,7 @@ public class LiDARService {
     }
 
     public void startMotor() {
-        if (!serialPort.isOpen()) {
+        if (serialPort.isOpen()) {
             serialPort.clearDTR();
         } else {
             throw new IllegalStateException("Can not start motor without open port");
