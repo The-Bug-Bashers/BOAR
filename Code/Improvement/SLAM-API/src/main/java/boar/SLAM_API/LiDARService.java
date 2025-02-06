@@ -89,7 +89,7 @@ public class LiDARService {
                     if (readBytes == 5) {
                         // Correctly extract the angle
                         int angleRaw = ((buffer[1] & 0xFF) | ((buffer[2] & 0xFF) << 8));
-                        float angle = (angleRaw >> 6) * 0.01f;  // Convert to degrees
+                        float angle = angleRaw / 64.0f;  // Convert to degrees
 
                         // Correctly extract the distance
                         int distanceRaw = ((buffer[3] & 0xFF) | ((buffer[4] & 0xFF) << 8));
