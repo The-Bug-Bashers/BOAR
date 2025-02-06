@@ -2,48 +2,70 @@ package boar.SLAM_API;
 
 import com.fazecast.jSerialComm.SerialPort;
 import java.io.InputStream;
+import java.net.PortUnreachableException;
 
 public class LiDARService {
-    private SerialPort serialPort;
+    private final SerialPort serialPort;
 
     public LiDARService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
+        if (!serialPort.openPort()) {throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");}
+
         serialPort.setBaudRate(115200);
+
+        stopMotor();
     }
 
     public void startMotor() {
+        if (!serialPort.isOpen()) {
+            serialPort.clearDTR();
+        } else {
+            throw new IllegalStateException("Can not start motor without open port");
+        }
+    }
+
+    public void stopMotor() {
+        if (serialPort.isOpen()) {
+            serialPort.setDTR();
+        } else {
+            throw new IllegalStateException("Can not stop motor without open port");
+        }
+    }
+
+    public void startScanning() {
+        if (serialPort.isOpen()) {
+            startMotor();
+            sendCommand((byte) 0xA5, (byte) 0x20); // Start scanning
+        } else {
+            throw new IllegalStateException("Can not start scanning without open port");
+        }
+
+    }
+
+    public void stopScanning() {
+        if (serialPort.isOpen()) {
+            sendCommand((byte) 0xA5, (byte) 0x25); // Stop scanning
+            stopMotor();
+        } else {
+            throw new IllegalStateException("Can not stop scanning without open port");
+        }
+    }
+
+    private void openSerialPort() {
         if (!serialPort.isOpen()) {
             boolean success = serialPort.openPort();
             if (!success) {
                 throw new RuntimeException("Failed to open serial port!");
             }
         }
-        serialPort.clearDTR();  // ✅ Correctly enables motor
-    }
-
-    public void stopMotor() {
-        if (serialPort.isOpen()) {
-            serialPort.setDTR();  // ✅ Correctly stops motor
-            serialPort.closePort();
-        }
-    }
-
-    public void startScanning() {
-        startMotor();  // Make sure motor is running
-        sendCommand((byte) 0xA5, (byte) 0x20);  // ✅ Start scanning
-    }
-
-    public void stopScanning() {
-        sendCommand((byte) 0xA5, (byte) 0x25);  // ✅ Stop scanning
-        stopMotor();  // Turn off motor after stopping scanning
     }
 
     private void sendCommand(byte... command) {
-        if (!serialPort.isOpen()) {
-            System.err.println("Error: Serial port is not open!");
-            return;
+        if (serialPort.isOpen()) {
+            serialPort.writeBytes(command, command.length);
+        } else {
+            throw new IllegalStateException("Can not write bytes without initialised port");
         }
-        serialPort.writeBytes(command, command.length);
     }
 
     private int parseDistance(byte[] data) {

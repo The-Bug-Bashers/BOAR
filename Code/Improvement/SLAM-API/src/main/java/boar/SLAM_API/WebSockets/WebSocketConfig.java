@@ -1,4 +1,4 @@
-package boar.SLAM_API;
+package boar.SLAM_API.WebSockets;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
