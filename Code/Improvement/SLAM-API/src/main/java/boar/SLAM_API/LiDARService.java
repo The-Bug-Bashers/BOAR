@@ -20,8 +20,26 @@ public class LiDARService {
         }
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 200, 0);
         serialPort.setBaudRate(115200);
-        stopMotor();
+        startMotor();
+        startScan();
         startContinuousReading();
+    }
+
+    private void startMotor() {
+        if (serialPort.isOpen()) {
+            serialPort.clearDTR(); // Starts the motor
+        } else {
+            throw new IllegalStateException("Cannot start motor without an open port");
+        }
+    }
+
+    private void startScan() {
+        if (serialPort.isOpen()) {
+            byte[] startScanCommand = {(byte) 0xA5, 0x20};
+            serialPort.writeBytes(startScanCommand, startScanCommand.length);
+        } else {
+            throw new IllegalStateException("Cannot start scan without an open port");
+        }
     }
 
     private void startContinuousReading() {
@@ -58,14 +76,6 @@ public class LiDARService {
 
     public String getLatestData() {
         return dataQueue.poll();
-    }
-
-    public void startMotor() {
-        if (serialPort.isOpen()) {
-            serialPort.clearDTR();
-        } else {
-            throw new IllegalStateException("Cannot start motor without an open port");
-        }
     }
 
     public void stopMotor() {

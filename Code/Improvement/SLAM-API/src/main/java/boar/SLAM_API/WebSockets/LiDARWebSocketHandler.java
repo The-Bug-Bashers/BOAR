@@ -7,6 +7,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+
 public class LiDARWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final LiDARService lidarService = new LiDARService();
@@ -18,14 +19,6 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             String command = jsonNode.get("command").asText();
 
             switch (command) {
-                case "startMotor":
-                    lidarService.startMotor();
-                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR motor started\"}"));
-                    break;
-                case "stopMotor":
-                    lidarService.stopMotor();
-                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR motor stopped\"}"));
-                    break;
                 case "getLatestData":
                     String data = lidarService.getLatestData();
                     if (data != null) {
