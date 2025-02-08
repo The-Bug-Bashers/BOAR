@@ -21,12 +21,12 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             String command = jsonNode.get("command").asText();
 
             switch (command) {
-                case "startScann":
+                case "startScan":
                     // Start scanning if not already scanning.
                     lidarService.startScanning();
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning started\"}"));
                     break;
-                case "stopScann":
+                case "stopScan":
                     lidarService.stopScanning();
                     stopDistanceStreaming();
                     streaming = false;

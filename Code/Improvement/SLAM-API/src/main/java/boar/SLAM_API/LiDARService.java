@@ -100,7 +100,10 @@ public class LiDARService {
                 System.out.println("LiDAR data not valid: " + new String(data));
             } else {
                 //int angle = ((data[i + 1] & 0xFF) | ((data[i + 2] & 0x7F) << 8)) / 64; TODO: remove if proofed false
-                int angle = (((data[i + 2] & 0xFF) << 8) | (data[i + 1] & 0xFF)) / 64;
+
+                int raw_angle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
+                double angle = raw_angle / 64.0;
+
                 int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
 
                 if (distance > 0) {
