@@ -15,6 +15,9 @@ public class LiDARService {
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
         }
+
+        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 200, 0);
+
         serialPort.setBaudRate(115200);
         openSerialPort();
         stopMotor();
@@ -77,9 +80,13 @@ public class LiDARService {
                 byte[] buffer = new byte[256];
                 while (serialPort.isOpen()) {
                     int numBytes = inputStream.read(buffer);
-                    if (numBytes > 0) {
-                        processLiDARData(buffer, numBytes, session);
+
+                    if (numBytes <= 0) {
+                        System.err.println("Error: no data received");
+                        continue;
                     }
+
+                    processLiDARData(buffer, numBytes, session);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -89,19 +96,30 @@ public class LiDARService {
 
     private void processLiDARData(byte[] data, int length, WebSocketSession session) {
         for (int i = 0; i < length - 4; i += 5) {
-            if ((data[i] & 0x01) != 0) { // Check if it's the start of a scan
-                int angle = ((data[i + 1] & 0xFF) | ((data[i + 2] & 0x7F) << 8)) / 64;
+            if ((data[i] & 0x01) == 0) {
+                System.out.println("LiDAR data not valid: " + new String(data));
+            } else {
+                //int angle = ((data[i + 1] & 0xFF) | ((data[i + 2] & 0x7F) << 8)) / 64; TODO: remove if proofed false
+                int angle = (((data[i + 2] & 0xFF) << 8) | (data[i + 1] & 0xFF)) / 64;
                 int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
 
                 if (distance > 0) {
-                    try {
-                        String json = String.format("{\"angle\": %d, \"distance\": %d}", angle, distance);
-                        session.sendMessage(new TextMessage(json));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    sendWebSocketMessage(session, String.format("{\"angle\": %d, \"distance\": %d}", angle, distance));
+                } else {
+                    sendWebSocketMessage(session, String.format("{\"angle\": %d, \"falseDistance\": %d}", angle, distance));
                 }
             }
         }
     }
+
+    private synchronized void sendWebSocketMessage(WebSocketSession session, String message) {
+        try {
+            if (session.isOpen()) {
+                session.sendMessage(new TextMessage(message));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
