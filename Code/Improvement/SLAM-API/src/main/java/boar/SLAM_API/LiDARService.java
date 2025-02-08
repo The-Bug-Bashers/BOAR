@@ -18,7 +18,7 @@ public class LiDARService {
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
         }
-        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 200, 0);
+        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 1000, 0);
         serialPort.setBaudRate(115200);
         startMotor();
         startScan();
@@ -49,7 +49,10 @@ public class LiDARService {
                 while (running) {
                     int numBytes = inputStream.read(buffer);
                     if (numBytes > 0) {
+                        System.out.println("Received bytes: " + numBytes);
                         processLiDARData(buffer, numBytes);
+                    } else {
+                        System.out.println("No data received...");
                     }
                 }
             } catch (Exception e) {
@@ -57,6 +60,7 @@ public class LiDARService {
             }
         }).start();
     }
+
 
     private void processLiDARData(byte[] data, int length) {
         for (int i = 0; i < length - 4; i += 5) {
