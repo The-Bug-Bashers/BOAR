@@ -107,9 +107,9 @@ public class LiDARService {
                 int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
 
                 if (distance > 0) {
-                    sendWebSocketMessage(session, String.format("{\"angle\": %d, \"distance\": %d}", angle, distance));
+                    sendWebSocketMessage(session, String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance));
                 } else {
-                    sendWebSocketMessage(session, String.format("{\"angle\": %d, \"falseDistance\": %d}", angle, distance));
+                    sendWebSocketMessage(session, String.format("{\"angle\": %.2f, \"falseDistance\": %d}", angle, distance));
                 }
             }
         }
