@@ -1,26 +1,63 @@
 package boar.SLAM_API;
 
 import com.fazecast.jSerialComm.SerialPort;
-import java.io.InputStream;
-
-import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.InputStream;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class LiDARService {
     private final SerialPort serialPort;
+    private final BlockingQueue<String> dataQueue = new LinkedBlockingQueue<>();
+    private volatile boolean running = true;
 
     public LiDARService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
         }
-
         serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 200, 0);
-
         serialPort.setBaudRate(115200);
-        openSerialPort();
         stopMotor();
+        startContinuousReading();
+    }
+
+    private void startContinuousReading() {
+        new Thread(() -> {
+            try (InputStream inputStream = serialPort.getInputStream()) {
+                byte[] buffer = new byte[256];
+                while (running) {
+                    int numBytes = inputStream.read(buffer);
+                    if (numBytes > 0) {
+                        processLiDARData(buffer, numBytes);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void processLiDARData(byte[] data, int length) {
+        for (int i = 0; i < length - 4; i += 5) {
+            if ((data[i] & 0x01) == 0) {
+                System.out.println("LiDAR data not valid: " + new String(data));
+            } else {
+                int rawAngle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
+                double angle = rawAngle / 64.0;
+                int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
+                if (distance > 0) {
+                    String message = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
+                    dataQueue.offer(message);
+                }
+            }
+        }
+    }
+
+    public String getLatestData() {
+        return dataQueue.poll();
     }
 
     public void startMotor() {
@@ -39,90 +76,11 @@ public class LiDARService {
         }
     }
 
-    public void startScanning() {
+    public void close() {
+        running = false;
+        stopMotor();
         if (serialPort.isOpen()) {
-            startMotor();
-            sendCommand((byte) 0xA5, (byte) 0x20); // Start scanning
-        } else {
-            throw new IllegalStateException("Cannot start scanning without an open port");
+            serialPort.closePort();
         }
     }
-
-    public void stopScanning() {
-        if (serialPort.isOpen()) {
-            sendCommand((byte) 0xA5, (byte) 0x25); // Stop scanning
-            stopMotor();
-        } else {
-            throw new IllegalStateException("Cannot stop scanning without an open port");
-        }
-    }
-
-    private void openSerialPort() {
-        if (!serialPort.isOpen()) {
-            boolean success = serialPort.openPort();
-            if (!success) {
-                throw new RuntimeException("Failed to open serial port!");
-            }
-        }
-    }
-
-    private void sendCommand(byte... command) {
-        if (serialPort.isOpen()) {
-            serialPort.writeBytes(command, command.length);
-        } else {
-            throw new IllegalStateException("Cannot write bytes without initialized port");
-        }
-    }
-
-    public void readDistanceData(WebSocketSession session) {
-        new Thread(() -> {
-            try (InputStream inputStream = serialPort.getInputStream()) {
-                byte[] buffer = new byte[256];
-                while (serialPort.isOpen()) {
-                    int numBytes = inputStream.read(buffer);
-
-                    if (numBytes <= 0) {
-                        System.err.println("Error: no data received");
-                        continue;
-                    }
-
-                    processLiDARData(buffer, numBytes, session);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
-
-    private void processLiDARData(byte[] data, int length, WebSocketSession session) {
-        for (int i = 0; i < length - 4; i += 5) {
-            if ((data[i] & 0x01) == 0) {
-                System.out.println("LiDAR data not valid: " + new String(data));
-            } else {
-                //int angle = ((data[i + 1] & 0xFF) | ((data[i + 2] & 0x7F) << 8)) / 64; TODO: remove if proofed false
-
-                int raw_angle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
-                double angle = raw_angle / 64.0;
-
-                int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
-
-                if (distance > 0) {
-                    sendWebSocketMessage(session, String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance));
-                } else {
-                    sendWebSocketMessage(session, String.format("{\"angle\": %.2f, \"falseDistance\": %d}", angle, distance));
-                }
-            }
-        }
-    }
-
-    private synchronized void sendWebSocketMessage(WebSocketSession session, String message) {
-        try {
-            if (session.isOpen()) {
-                session.sendMessage(new TextMessage(message));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 }

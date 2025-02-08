@@ -9,10 +9,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 public class LiDARWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
-    final LiDARService lidarService = new LiDARService();
-    // Use a dedicated thread for streaming
-    private Thread streamingThread;
-    private volatile boolean streaming = false;
+    private final LiDARService lidarService = new LiDARService();
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -21,34 +18,20 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             String command = jsonNode.get("command").asText();
 
             switch (command) {
-                case "startScan":
-                    // Start scanning if not already scanning.
-                    lidarService.startScanning();
-                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning started\"}"));
+                case "startMotor":
+                    lidarService.startMotor();
+                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR motor started\"}"));
                     break;
-                case "stopScan":
-                    lidarService.stopScanning();
-                    stopDistanceStreaming();
-                    streaming = false;
-                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
+                case "stopMotor":
+                    lidarService.stopMotor();
+                    session.sendMessage(new TextMessage("{\"message\": \"LiDAR motor stopped\"}"));
                     break;
-                case "startStreamDistance":
-                    if (!streaming) {
-                        streaming = true;
-                        lidarService.startScanning();
-                        lidarService.readDistanceData(session);
-                        session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
+                case "getLatestData":
+                    String data = lidarService.getLatestData();
+                    if (data != null) {
+                        session.sendMessage(new TextMessage(data));
                     } else {
-                        session.sendMessage(new TextMessage("{\"error\": \"Already streaming distance!\"}"));
-                    }
-                    break;
-                case "stopStreamDistance":
-                    if (streaming) {
-                        streaming = false;
-                        stopDistanceStreaming();
-                        session.sendMessage(new TextMessage("{\"message\": \"Distance streaming stopped\"}"));
-                    } else {
-                        session.sendMessage(new TextMessage("{\"error\": \"Not streaming distance!\"}"));
+                        session.sendMessage(new TextMessage("{\"message\": \"No new data available\"}"));
                     }
                     break;
                 default:
@@ -57,14 +40,6 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
         } catch (Exception e) {
             session.sendMessage(new TextMessage("{\"error\": \"Internal server error: " + e.getMessage() + "\"}"));
             e.printStackTrace();
-        }
-    }
-
-    private void stopDistanceStreaming() {
-        streaming = false;
-        if (streamingThread != null && streamingThread.isAlive()) {
-            streamingThread.interrupt();
-            streamingThread = null;
         }
     }
 }
