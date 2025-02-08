@@ -32,28 +32,17 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
                     streaming = false;
                     session.sendMessage(new TextMessage("{\"message\": \"LiDAR scanning stopped\"}"));
                     break;
-                case "startStreamFrontDistance":
+                case "startStreamDistance":
                     if (!streaming) {
                         streaming = true;
-                        streamingThread = new Thread(() -> {
-                            while (streaming && session.isOpen()) {
-                                try {
-                                    // This call blocks until one full rotation returns a valid front distance.
-                                    int frontDistance = lidarService.getFrontDistance();
-                                    // Send the distance as a JSON message (in mm).
-                                    session.sendMessage(new TextMessage("{\"distance_mm\": " + frontDistance + "}"));
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-                        streamingThread.start();
+                        lidarService.startScanning();
+                        lidarService.readDistanceData(session);
                         session.sendMessage(new TextMessage("{\"message\": \"Distance streaming started\"}"));
                     } else {
-                        session.sendMessage(new TextMessage("{\"error\": \"Already streaming front distance!\"}"));
+                        session.sendMessage(new TextMessage("{\"error\": \"Already streaming distance!\"}"));
                     }
                     break;
-                case "stopStreamFrontDistance":
+                case "stopStreamDistance":
                     if (streaming) {
                         streaming = false;
                         stopDistanceStreaming();
