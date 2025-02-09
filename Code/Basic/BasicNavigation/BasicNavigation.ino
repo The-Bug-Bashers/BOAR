@@ -1,53 +1,69 @@
-// Define parameters which need to be fine tuned
+/*
+ * Authors: Jannik Händel, Justus Dicker
+ *
+ * License: Creative Commons Attribution-NonCommercial-ShareAlike (CC BY-NC-SA)
+ *
+ * This code is open-source and may be used, modified, and shared under the following conditions:
+ * - You must credit the original authors when redistributing or modifying the code.
+ * - You may NOT use this code or any derived work for commercial purposes.
+ * - Any modifications or derivative works must be released under the same license.
+ * - The authors are NOT accountable for any damages, harm, or issues resulting from the use of this code.
+ *
+ * More details about this license: https://creativecommons.org/licenses/by-nc-sa/4.0/
+ */
 
-const int breakDuration = 100; // Duration the robot waits to fully stop in ms
 
-const short drivingSpeed = 255; // in analog write value (0-255)
-const short slowDrivingSpeed = 255; // in analog write value (0-255)
+// Define parameters which need to be fine-tuned (units provided in backers)
 
-const short USSStopThreshold = 15; // in cm
-const short USSSlowdownThreshold = 25; // in cm
+#define delayUntilNextScanningCycle 10 // Delay between sensor updates (ms)
 
-// Turning parameters
-const short turnOuterWheelSpeed = 255; // in analog write value (0-255)
-const short turnInnerWheelSpeed = 255; // in analog write value (0-255)
-const int turn90DegreeDuration = 625; // in ms
-const int turn10DegreeDuration = 100; // in ms
+#define drivingSpeed 255 // Normal driving speed (PWM value 0-255)
+#define slowDrivingSpeed 240 // Slow driving speed (PWM value 0-255)
 
-const int delayUntilNextScanningCycle = 500; // in ms
+#define breakDuration 150 // Duration the robot waits to fully stop (ms)
+
+#define USSStopThreshold 15 // Distance threshold for stopping (cm)
+#define USSSlowdownThreshold 25 // Distance threshold for slowing down (cm)
+
+#define turnOuterWheelSpeed 255 // Speed for outer wheel during turns (PWM value 0-255)
+#define turnInnerWheelSpeed 250 // Speed for inner wheel during turns (PWM value 0-255)
+#define turn90DegreeDuration 625 // Time to complete a 90-degree turn (ms)
+#define turn10DegreeDuration 110 // Time to complete a 10-degree turn (ms)
 
 
 // Define pins
 
-// Define motor pins
-int motorLeftSpeed = 5; // ENA
-int motorLeftForward = 3; // IN1
-int motorLeftBackward = 4; // IN2
-int motorRightSpeed = 6; // ENB
-int motorRightForward = 12; // IN3
-int motorRightBackward = 2; // IN4
+// Left Motor
+#define motorLeftSpeed 5 // speed (pwm pin)
+#define motorLeftForward 3 // direction control (forward)
+#define motorLeftBackward 4 // direction control (backward)
 
-// Define infrared sensor pins
-#define IRLeft 9
-#define IRRight 10
+// Right Motor
+#define motorRightSpeed 6 // speed (pwm pin)
+#define motorRightForward 12 // direction control (forward)
+#define motorRightBackward 2 /// direction control (backward)
 
-// Define ultrasonic sensor pins
-#define USSEcho A1
-#define USSTrigger 11
+#define IRLeft 9 // Left infrared sensor
+#define IRRight 10 // Right infrared sensor
+
+#define USSEcho A1 // Echo pin for ultrasonic sensor
+#define USSTrigger 11 // Trigger pin for ultrasonic sensor
 
 
-// Define variables
-bool isIRLeft, isIRRight;
-short forwardDrivingSpeed; // 0 = not driving forward, 1 = Slowly forward, 2 = Fast forward
-int USSDistance;
+// Define global variables
+bool isIRLeft, isIRRight; // IR sensor readings
+short forwardDrivingSpeed; // 0 = not driving forward, 1 = slow forward, 2 = fast forward
+int USSDistance; // Distance measured by ultrasonic sensor
 
 
 void setup() {
+  // Set sensor pins
   pinMode(IRLeft, INPUT);
   pinMode(IRRight, INPUT);
   pinMode(USSEcho, INPUT);
   pinMode(USSTrigger, OUTPUT);
 
+  // Set motor control pins
   pinMode(motorLeftSpeed, OUTPUT);
   pinMode(motorLeftForward, OUTPUT);
   pinMode(motorLeftBackward, OUTPUT);
@@ -55,11 +71,13 @@ void setup() {
   pinMode(motorRightForward, OUTPUT);
   pinMode(motorRightBackward, OUTPUT);
 
-  Serial.begin(9600);
+  Serial.begin(9600); // Initialize serial communication
 }
 
 void loop() {
-  updateSensorValues();
+  updateSensorValues(); // Update stored sensor values to current sensor values
+
+  // Output sensor values through serial Monitor
   Serial.print("Sensor values: IRL: ");
   Serial.print(isIRLeft);
   Serial.print(" IRR: ");
@@ -67,128 +85,118 @@ void loop() {
   Serial.print(" SSS: ");
   Serial.println(USSDistance);
 
-  if (isIRLeft || isIRRight || USSDistance <= USSStopThreshold) {
-    if (isIRLeft) {
+  // Evaluate sensor data and decide best response
+  if (isIRLeft || isIRRight || USSDistance <= USSStopThreshold) { // Check if distance is critically low
+    if (isIRLeft) { // If  wall detected in shallow angle left: turn slightly right
       Serial.println("Turning slightly Left");
       forwardDrivingSpeed = 0;
       turn(false, true);
-    } else if (isIRRight) {
+    } else if (isIRRight) { // If  wall detected in shallow angle right: turn slightly left
       Serial.println("Turning slightly Right");
       forwardDrivingSpeed = 0;
       turn(false, false);
-    } else {
+    } else { // If wall detected right in front: turn to furthest direction (either 90 degree left or right)
       Serial.println("Turning to furthest direction");
       forwardDrivingSpeed = 0;
       turnToFurthestDirection();
     }
-  } else if (USSDistance <= USSSlowdownThreshold && forwardDrivingSpeed != 1) {
+  } else if (USSDistance <= USSSlowdownThreshold && forwardDrivingSpeed != 1) { // If wall in front near robot: drive slow
     Serial.println("Driving Slow");
     drive(slowDrivingSpeed, true);
     forwardDrivingSpeed = 1;
-  } else if (USSDistance > USSSlowdownThreshold && forwardDrivingSpeed != 2) {
-    Serial.println("Driving Fast");    
+  } else if (USSDistance > USSSlowdownThreshold && forwardDrivingSpeed != 2) { // If wall in front far away: drive fast
+    Serial.println("Driving Fast");
     forwardDrivingSpeed = 2;
     drive(drivingSpeed, true);
   }
 
-  delay(delayUntilNextScanningCycle);
+  delay(delayUntilNextScanningCycle); // Wait before next iteration
 }
 
-
-// Functions
-
+// Function to turn towards the furthest detected direction (either 90 degree left or right)
 void turnToFurthestDirection() {
-  turn(true, false);
-  delay(1000);
+  turn(true, false); // Turn left (90°)
+  delay(10);
   updateSensorValues();
-  const short distanceLeft = USSDistance;
+  const int distanceLeft = USSDistance; // Save distance to left wall
 
-  turn(true, true);
-  turn(true, true);
-  delay(1000);
+  turn(true, true); // Turn right (90°)
+  turn(true, true); // Turn right again (90°) to measure distance of right wall
+  delay(10);
   updateSensorValues();
-  const short distanceRight = USSDistance;
+  const int distanceRight = USSDistance; // Save distance to left wall
 
+  // Turn back to the side with more space
   if (distanceLeft > distanceRight) {
-    turn(true, false);
-    turn(true, false);
+    turn(true, false); // Turn left (90°)
+    turn(true, false); // Turn left (90°)
   }
 }
 
-
-// Utility functions
-
-// Sensor utility functions
-
+// Function to update sensor values
 void updateSensorValues() {
-  isIRLeft = digitalRead(IRLeft) ? 0 : 1;
-  isIRRight = digitalRead(IRRight) ? 0 : 1;
+  isIRLeft = digitalRead(IRLeft) ? 0 : 1; // Read ans set if left IR sensor triggered
+  isIRRight = digitalRead(IRRight) ? 0 : 1; // Read and set right if IR sensor triggered
 
+  // Measure distance using ultrasonic sensor
   digitalWrite(USSTrigger, 1);
   delay(10);
   digitalWrite(USSTrigger, 0);
-  USSDistance = (pulseIn(USSEcho, 1) / 2) * 0.03432;
+  USSDistance = (pulseIn(USSEcho, 1) / 2) * 0.03432; // Convert to cm
 }
 
-
-// Motor utility functions
-
+// Function to drive the robot forward or backward
 void drive(short speed, bool driveForward) {
-  stopMotors();
+  stopMotors(); // Ensure motors are stopped before driving
 
   analogWrite(motorLeftSpeed, speed);
   analogWrite(motorRightSpeed, speed);
 
   if (driveForward) {
     digitalWrite(motorLeftForward, 1);
-    delay(1);
+    delay(1); // wait in order to not break motor controller
     digitalWrite(motorRightForward, 1);
   } else {
     digitalWrite(motorLeftBackward, 1);
-    delay(1);
+    delay(1); // wait in order to not break motor controller
     digitalWrite(motorRightBackward, 1);
   }
 }
 
-void turn(bool turn90Degre, bool turnRight) {
-  short innerMotorSpeed, innerMotorDirection, autherMotorSpeed, autherMotorDirection;
+// Function to turn the robot
+void turn(bool turn90Degree, bool turnRight) {
+  short innerMotorSpeed, innerMotorDirection, outerMotorSpeed, outerMotorDirection;
   int turnDuration;
 
-
+  // Assign motor control based on turn direction
   if (turnRight) {
     innerMotorSpeed = motorRightSpeed;
     innerMotorDirection = motorRightBackward;
-
-    autherMotorSpeed = motorLeftSpeed;
-    autherMotorDirection = motorLeftForward;
+    outerMotorSpeed = motorLeftSpeed;
+    outerMotorDirection = motorLeftForward;
   } else {
     innerMotorSpeed = motorLeftSpeed;
     innerMotorDirection = motorLeftBackward;
-
-    autherMotorSpeed = motorRightSpeed;
-    autherMotorDirection = motorRightForward;
+    outerMotorSpeed = motorRightSpeed;
+    outerMotorDirection = motorRightForward;
   }
 
-  if (turn90Degre) {
-    turnDuration = turn90DegreeDuration;
-  } else {
-    turnDuration = turn10DegreeDuration;
-  }
+  turnDuration = turn90Degree ? turn90DegreeDuration : turn10DegreeDuration; // if method was called to turn 90 Degrees: set turn duration duration to turn 90 degree duration
 
-  breakMotors();
+  breakMotors(); // Stop before turning
 
   analogWrite(innerMotorSpeed, turnInnerWheelSpeed);
-  analogWrite(autherMotorSpeed, turnOuterWheelSpeed);
+  analogWrite(outerMotorSpeed, turnOuterWheelSpeed);
   digitalWrite(innerMotorDirection, 1);
-  delay(1);
-  digitalWrite(autherMotorDirection, 1);
+  delay(1); // wait in order to not break motor controller
+  digitalWrite(outerMotorDirection, 1);
 
   delay(turnDuration);
 
-  breakMotors();
+  breakMotors(); // Stop after turn
 }
 
-
+// Function to stop all motors
 void stopMotors() {
   digitalWrite(motorLeftForward, 0);
   digitalWrite(motorLeftBackward, 0);
@@ -196,16 +204,17 @@ void stopMotors() {
   digitalWrite(motorRightBackward, 0);
 }
 
+// Function to apply a short brake to the motors
 void breakMotors() {
   digitalWrite(motorRightSpeed, 1);
   digitalWrite(motorLeftSpeed, 1);
 
   digitalWrite(motorLeftForward, 1);
-  delay(1);
+  delay(1); // wait in order to not break motor controller
   digitalWrite(motorLeftBackward, 1);
-  delay(1);
+  delay(1); // wait in order to not break motor controller
   digitalWrite(motorRightForward, 1);
-  delay(1);
+  delay(1); // wait in order to not break motor controller
   digitalWrite(motorRightBackward, 1);
 
   delay(breakDuration);
