@@ -15,7 +15,7 @@
 
 // Define parameters which need to be fine-tuned (units provided in backers)
 
-#define delayUntilNextScanningCycle 10 // Delay between sensor updates (ms)
+#define delayUntilNextScanningCycle 1 // Delay between sensor updates (ms)
 
 #define drivingSpeed 255 // Normal driving speed (PWM value 0-255)
 #define slowDrivingSpeed 240 // Slow driving speed (PWM value 0-255)
