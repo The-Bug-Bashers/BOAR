@@ -7,6 +7,7 @@
         <link type="text/css" rel="stylesheet" href="box.css">
         <link type="text/css" rel="stylesheet" href="console.css">
         <link type="text/css" rel="stylesheet" href="button.css">
+        <script src="webSocket.js" defer></script>
     </head>
     <body>
         <h1 id="headerText">improved <b>B</b>asic <b>O</b>bstacle <b>A</b>voidance <b>R</b>obot</h1>
@@ -15,7 +16,7 @@
             <div id="consoleOutput"></div>
             <div id="consoleTextField">
                 <input type="text" id="consoleInput" placeholder="Enter command here">
-                <button id="consoleSubmit" class="button">Send</button>
+                <button id="consoleSubmit" class="button" onclick="sendMessage(document.getElementById('consoleInput').value)">Send</button>
             </div>
         </div>
     </body>

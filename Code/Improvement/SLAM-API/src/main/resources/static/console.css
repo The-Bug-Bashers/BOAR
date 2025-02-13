@@ -38,3 +38,19 @@
         width: 5vmin;
     }
 }
+
+.message {
+    width: fit-content;
+    padding: 0.5vmin;
+    margin: 0.5vmin;
+    border-radius: 8px;
+}
+
+.receivedMessage {
+    background-color: #6ca524;
+}
+
+.sentMessage {
+    background-color: #733556;
+    margin-left: auto;
+}
