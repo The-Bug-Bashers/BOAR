@@ -8,6 +8,7 @@
 
 #consoleOutput {
     height: 60vh;
+    overflow-y: auto;
 }
 
 #consoleTextField {
@@ -39,18 +40,28 @@
     }
 }
 
+
+/* Messages */
 .message {
     width: fit-content;
+    max-width: 100%;
+    word-break: break-word;
     padding: 0.5vmin;
     margin: 0.5vmin;
     border-radius: 8px;
 }
 
+/* Message types */
 .receivedMessage {
     background-color: #6ca524;
 }
-
 .sentMessage {
     background-color: #733556;
     margin-left: auto;
+}
+.errorMessage {
+    background-color: #a52424;
+}
+.infoMessage {
+    background-color: #006fff;
 }
