@@ -1,6 +1,6 @@
 :root {
     --max-font-size: 26px; /* Set only the maximum value of clamp() */
-    --font-color: #fbd8e6;
+    --font-color: #ffffff;
 }
 
 body {

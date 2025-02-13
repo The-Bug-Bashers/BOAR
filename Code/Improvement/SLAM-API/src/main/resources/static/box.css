@@ -1,13 +1,10 @@
-/* !WARNING! box.css must always be loaded before the style.css file from the original site but after main.css because it sets some variables for other files */
-
 :root {
-    --modal-backround-color: #57213E;
-    --modal-backround-color-hover: #703353;
-    --modal-border-color: #95375b;
+    --modal-backround-color: #2b2d30;
+    --modal-border-color: #43454a;
 }
 .box {
     background-color: var(--modal-backround-color);
-    box-shadow: 0 0 110px #6E3952;
+    box-shadow: 0 0 110px #5a5b60;
     border-color: var(--modal-border-color);
     border-width: 3px;
     border-style: solid;
@@ -21,18 +18,18 @@
     text-align: center;
     margin: 0;
     padding: 10px;
-    border-bottom: 6px solid #fbd8e6;
+    border-bottom: 6px solid #ffffff;
 }
 
 .box h2 {
     text-align: center;
-    color: #fbd8e6;
+    color: #ffffff;
     margin: 10px 0;
 }
 
 .box-row {
     padding: 0.7em;
-    border-bottom: 3px solid #fbd8e6;
+    border-bottom: 3px solid #ffffff;
 }
 
 .box-row:last-child {
