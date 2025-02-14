@@ -1,5 +1,5 @@
 const socketURL = 'wss://ws.ifelse.io';
-const socket = new WebSocket(socketURL);
+let socket = new WebSocket(socketURL);
 
 // Displays the message in the console
 function showMessage(message, received, error, info) {
@@ -28,7 +28,7 @@ function showMessage(message, received, error, info) {
 
 // Returns a list of available commands
 function getCommandList() {
-    return ["clear", "disconnect", "help"];
+    return ["clear", "disconnect", "help", "connect"];
 }
 
 // Checks if the message is a command
@@ -49,6 +49,15 @@ function executeCommand(command) {
         showMessage("You can send a message by entering it into the text field and pressing ENTER or the button.", true, false, true);
         showMessage("There are also some commands available to control the console.", true, false, true);
         showAvailableCommands();
+    } else if (command === "connect") {
+        if (socket.readyState === WebSocket.OPEN) {
+            showMessage("You're already connected to the server.", true, true, false);
+        } else {
+            socket = new WebSocket(socketURL);
+            addEventListeners();
+        }
+    } else {
+        showMessage("There was a program-intern error with recognizing the command.", true, true, false);
     }
 }
 
@@ -81,27 +90,32 @@ function sendMessage(message) {
     }
 }
 
-// Event listener for when the connection is open
-socket.addEventListener('open', () => {
-    console.log('WebSocket connection established.');
-    showMessage("Connection established.", true, false, true);
-});
+// Event listeners
+function addEventListeners() {
+    // Event listener for when the connection is open
+    socket.addEventListener('open', () => {
+        console.log('WebSocket connection established.');
+        showMessage("Connection established.", true, false, true);
+    });
 
-// Event listener for when a message is received
-socket.addEventListener('message', (event) => {
-    showMessage(event.data, true, false, false);
-});
+    // Event listener for when a message is received
+    socket.addEventListener('message', (event) => {
+        showMessage(event.data, true, false, false);
+    });
 
-// Event listener for when the connection is closed
-socket.addEventListener('close', () => {
-    showMessage("Connection closed.", true, true, false);
-});
+    // Event listener for when the connection is closed
+    socket.addEventListener('close', () => {
+        showMessage("Connection closed.", true, true, false);
+    });
 
-// Event listener for errors
-socket.addEventListener('error', (error) => {
-    showMessage(`An error occurred: ${error}`, true, true, false);
-    console.error('WebSocket error:', error);
-});
+    // Event listener for errors
+    socket.addEventListener('error', (error) => {
+        showMessage(`An error occurred: ${error}`, true, true, false);
+        console.error('WebSocket error:', error);
+    });
+}
+
+addEventListeners();
 
 function scrollDownInConsole() {
     const element = document.getElementById("consoleOutput");

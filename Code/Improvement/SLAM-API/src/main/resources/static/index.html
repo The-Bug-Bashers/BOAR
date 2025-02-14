@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>BOAR</title>
+        <title>iBOAR</title>
+        <link rel="icon" href="BOAR-logo-trans.png">
         <link type="text/css" rel="stylesheet" href="general.css">
         <link type="text/css" rel="stylesheet" href="box.css">
         <link type="text/css" rel="stylesheet" href="console.css">
@@ -10,12 +11,12 @@
         <script src="webSocket.js" defer></script>
     </head>
     <body>
-        <h1 id="headerText">improved <b>B</b>asic <b>O</b>bstacle <b>A</b>voidance <b>R</b>obot</h1>
+        <div id="header"><h1 id="headerText">i</h1><img src="BOAR-logo-trans.png" id="logo" alt="BOAR logo"></div>
         <div id="console" class="box">
             <h1>Console</h1>
             <div id="consoleOutput"></div>
             <form id="consoleTextField">
-                <input type="text" id="consoleInput" placeholder="Enter command here">
+                <input type="text" id="consoleInput" placeholder="Enter command here" autocomplete="off">
                 <button id="consoleSubmit" class="button">Send</button>
             </form>
         </div>
