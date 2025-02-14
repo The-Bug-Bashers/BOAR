@@ -1,0 +1,15 @@
+#motors {
+    z-index: 1;
+
+    position: fixed;
+    top: 2vmin;
+    right: 2vmin;
+
+    width: 40vmin;
+    height: 43vmin;
+    text-align: center;
+}
+
+#motorsImage {
+    width: 40vmin;
+}

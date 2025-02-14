@@ -1,9 +1,11 @@
 #console {
+    z-index: 1;
+
     position: fixed;
     right: 2vmin;
-    width: 50vmin;
+    width: 40vmin;
     bottom: 2vmin;
-    top: 2vmin;
+    top: 50vmin;
 }
 
 #consoleOutput {

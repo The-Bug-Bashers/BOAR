@@ -3,15 +3,20 @@
     <head>
         <meta charset="UTF-8">
         <title>iBOAR</title>
-        <link rel="icon" href="BOAR-logo-trans.png">
-        <link type="text/css" rel="stylesheet" href="general.css">
-        <link type="text/css" rel="stylesheet" href="box.css">
-        <link type="text/css" rel="stylesheet" href="console.css">
-        <link type="text/css" rel="stylesheet" href="button.css">
+        <link rel="icon" href="resources/images/BOAR-logo-trans.png">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/general.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/box.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/console.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/button.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/motors.css">
         <script src="webSocket.js" defer></script>
     </head>
     <body>
-        <div id="header"><h1 id="headerText">i</h1><img src="BOAR-logo-trans.png" id="logo" alt="BOAR logo"></div>
+        <div id="header"><h1 id="headerText">i</h1><img src="resources/images/BOAR-logo-trans.png" id="logo" alt="BOAR logo"></div>
+        <div class="box" id="motors">
+            <h1>Motors</h1>
+            <img src="resources/images/iBOAR-top-view.svg" alt="iBOAR top view" id="motorsImage">
+        </div>
         <div id="console" class="box">
             <h1>Console</h1>
             <div id="consoleOutput"></div>
