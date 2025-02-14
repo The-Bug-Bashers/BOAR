@@ -7,7 +7,7 @@
 }
 
 #consoleOutput {
-    height: 60vh;
+    height: 74.9vh;
     overflow-y: auto;
     font-size: 2vmin;
 }
@@ -53,15 +53,15 @@
 
 /* Message types */
 .receivedMessage {
-    background-color: #6ca524;
+    background-color: #62656a;
 }
 .sentMessage {
-    background-color: #733556;
+    background-color: #4c4d53;
     margin-left: auto;
 }
 .errorMessage {
     background-color: #a52424;
 }
 .infoMessage {
-    background-color: #006fff;
+    background-color: #245fa3;
 }
