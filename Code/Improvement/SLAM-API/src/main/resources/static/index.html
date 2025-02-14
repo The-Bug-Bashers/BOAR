@@ -9,10 +9,20 @@
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/console.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/button.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/motors.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/lidar.css">
         <script src="webSocket.js" defer></script>
     </head>
     <body>
         <div id="header"><h1 id="headerText">i</h1><img src="resources/images/BOAR-logo-trans.png" id="logo" alt="BOAR logo"></div>
+        <div class="box" id="lidar">
+            <h1>LiDAR</h1>
+            <div id="lidarCanvas"></div>
+            <div id="buttons">
+                <button class="button">Refresh</button>
+                <button class="button">Start auto-refresh</button>
+                <button class="button">Stop auto-refresh</button>
+            </div>
+        </div>
         <div class="box" id="motors">
             <h1>Motors</h1>
             <img src="resources/images/iBOAR-top-view.svg" alt="iBOAR top view" id="motorsImage">
