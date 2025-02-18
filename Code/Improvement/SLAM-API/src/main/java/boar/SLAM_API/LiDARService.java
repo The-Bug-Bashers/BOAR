@@ -27,7 +27,7 @@ public class LiDARService {
     @Autowired
     public LiDARService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
-        
+
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
@@ -83,12 +83,6 @@ public class LiDARService {
                 e.printStackTrace();
             }
         }).start();
-    }
-
-    // Synchronized helper: copy current scan data into global storage
-    private synchronized void updateGlobalScanData() {
-        globalScanData.clear();
-        globalScanData.addAll(currentScanData);
     }
 
     // Synchronized helper: add a new data point
