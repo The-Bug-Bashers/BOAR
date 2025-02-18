@@ -3,19 +3,8 @@
     left: 2vmin;
     top: 14vh;
     bottom: 2vmin;
-    width: calc(100% - 58.5vmin);
+    width: 71vmin;
     text-align: center;
-
-    #buttons {
-        position: absolute;
-        margin-top: 1em;
-        left: 1em;
-
-        button {
-            font-size: 1em;
-            margin: 0.3em;
-        }
-    }
 }
 
 #lidarCanvas {

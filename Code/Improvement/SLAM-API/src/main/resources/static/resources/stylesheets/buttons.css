@@ -1,0 +1,12 @@
+#buttons {
+    position: fixed;
+    left: 81vmin;
+    top: 14vh;
+    bottom: 2vmin;
+    width: 34vmin;
+
+    button {
+        font-size: 0.7em;
+        margin: 0.3em;
+    }
+}
