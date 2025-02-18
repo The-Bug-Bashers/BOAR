@@ -15,8 +15,8 @@ public class LiDARService {
     // Temporary storage for accumulating points until a full scan is complete
     private final List<String> currentScanData = new ArrayList<>();
 
-    // To help detect when a full scan has been completed via angle wrap-around
-    private double lastAngle = -1.0;
+    // Holds the last processed angle (initially not set)
+    private double lastAngle = -1;
 
     public LiDARService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
@@ -40,8 +40,7 @@ public class LiDARService {
 
     private void startMotor() {
         if (serialPort.isOpen()) {
-            // This command may vary depending on your wiring/setup
-            serialPort.clearDTR();
+            serialPort.clearDTR(); // Starts the motor
         } else {
             throw new IllegalStateException("Cannot start motor without an open port");
         }
@@ -80,7 +79,7 @@ public class LiDARService {
         }).start();
     }
 
-    // Synchronized helper: update global scan storage from current scan data
+    // Synchronized helper: copy current scan data into global storage
     private synchronized void updateGlobalScanData() {
         globalScanData.clear();
         globalScanData.addAll(currentScanData);
@@ -98,15 +97,15 @@ public class LiDARService {
 
     /**
      * Process incoming LiDAR data.
-     * Assumes each measurement is 5 bytes.
-     * Instead of solely relying on the new-scan flag, we detect the end of a full scan when the angle wraps around.
+     * Assumes each measurement is 5 bytes, with:
+     * - Bytes 1-2: Angle (packed; divided by 64.0 to get degrees)
+     * - Bytes 3-4: Distance
+     *
+     * A full scan is considered complete when the current angle is lower than the previous angle.
      */
     private void processLiDARData(byte[] data, int length) {
         // Process data in chunks of 5 bytes
         for (int i = 0; i <= length - 5; i += 5) {
-            // Use the isNewScan flag if needed (not used as the primary indicator here)
-            boolean isNewScan = (data[i] & 0x01) == 1;
-
             int rawAngle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
             double angle = rawAngle / 64.0;
             int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
@@ -115,16 +114,17 @@ public class LiDARService {
             if (distance > 0) {
                 String dataPoint = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
 
-                // If we have already accumulated data and the current angle is less than the last,
-                // assume a full scan has completed.
-                if (lastAngle >= 0 && !currentScanData.isEmpty() && angle < lastAngle) {
-                    System.out.println("Scan complete. Points collected: " + currentScanData.size());
+                // If we have a previous angle and the current angle is less than it,
+                // we consider that the previous full 360 scan is complete.
+                if (lastAngle != -1 && angle < lastAngle) {
                     updateGlobalScanData();
                     clearCurrentScanData();
                 }
-                // Update the lastAngle and add the new data point.
-                lastAngle = angle;
+
+                // Add the current measurement to the temporary storage.
                 addDataPoint(dataPoint);
+                // Update lastAngle for the next comparison.
+                lastAngle = angle;
             }
         }
     }
