@@ -17,7 +17,6 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             JsonNode jsonNode = objectMapper.readTree(message.getPayload());
             String command = jsonNode.get("command").asText();
 
-            // Only accept the "printLatestData" command
             if ("printLatestData".equals(command)) {
                 String data = lidarService.getLatestData();
                 session.sendMessage(new TextMessage(data));

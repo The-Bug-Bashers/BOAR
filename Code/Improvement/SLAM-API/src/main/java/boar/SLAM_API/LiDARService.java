@@ -1,6 +1,7 @@
 package boar.SLAM_API;
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortTimeoutException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,16 +20,25 @@ public class LiDARService {
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
         }
-        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 1000, 0);
+        // Increase timeout to allow more time for data to arrive
+        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 2000, 0);
         serialPort.setBaudRate(115200);
+
         startMotor();
         startScan();
+        // Allow the LiDAR time to initialize and start sending data
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         startContinuousReading();
     }
 
     private void startMotor() {
         if (serialPort.isOpen()) {
-            serialPort.clearDTR(); // Starts the motor
+            // This command may vary depending on your wiring/setup
+            serialPort.clearDTR();
         } else {
             throw new IllegalStateException("Cannot start motor without an open port");
         }
@@ -48,12 +58,17 @@ public class LiDARService {
             try (InputStream inputStream = serialPort.getInputStream()) {
                 byte[] buffer = new byte[256];
                 while (running) {
-                    int numBytes = inputStream.read(buffer);
-                    if (numBytes > 0) {
-                        System.out.println("Received bytes: " + numBytes);
-                        processLiDARData(buffer, numBytes);
-                    } else {
-                        System.out.println("No data received...");
+                    try {
+                        int numBytes = inputStream.read(buffer);
+                        if (numBytes > 0) {
+                            System.out.println("Received bytes: " + numBytes);
+                            processLiDARData(buffer, numBytes);
+                        } else {
+                            System.out.println("No data received...");
+                        }
+                    } catch (SerialPortTimeoutException e) {
+                        // Timeout is expected if no data is available; log and continue
+                        System.out.println("Read timed out: " + e.getMessage());
                     }
                 }
             } catch (Exception e) {
@@ -62,7 +77,7 @@ public class LiDARService {
         }).start();
     }
 
-    // Synchronized helper: copy current scan data into global storage
+    // Synchronized helper: update global scan storage from current scan data
     private synchronized void updateGlobalScanData() {
         globalScanData.clear();
         globalScanData.addAll(currentScanData);
@@ -94,9 +109,8 @@ public class LiDARService {
             // Only consider valid points (non-zero distance)
             if (distance > 0) {
                 String dataPoint = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
-
-                // If the new-scan flag is set and there is already data in the temporary storage,
-                // assume the previous scan is complete. Update the global storage and clear current data.
+                // If a new scan is detected and we already have data accumulated,
+                // update the global scan data and clear the temporary storage.
                 if (isNewScan && !currentScanData.isEmpty()) {
                     updateGlobalScanData();
                     clearCurrentScanData();
