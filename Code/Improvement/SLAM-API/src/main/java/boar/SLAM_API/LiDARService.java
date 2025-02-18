@@ -63,10 +63,7 @@ public class LiDARService {
                     try {
                         int numBytes = inputStream.read(buffer);
                         if (numBytes > 0) {
-                            System.out.println("Received bytes: " + numBytes);
                             processLiDARData(buffer, numBytes);
-                        } else {
-                            System.out.println("No data received...");
                         }
                     } catch (SerialPortTimeoutException e) {
                         // Timeout is expected if no data is available; log and continue
@@ -114,11 +111,16 @@ public class LiDARService {
             if (distance > 0) {
                 String dataPoint = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
 
+                // Log the received data point
+                System.out.println("Received Data Point: " + dataPoint);
+
                 // If we have a previous angle and the current angle is less than it,
                 // we consider that the previous full 360 scan is complete.
                 if (lastAngle != -1 && angle < lastAngle) {
                     updateGlobalScanData();
                     clearCurrentScanData();
+                    // Log that the full scan data has been updated
+                    System.out.println("Full scan completed and global scan data updated.");
                 }
 
                 // Add the current measurement to the temporary storage.
