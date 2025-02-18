@@ -1,100 +1,83 @@
 package boar.SLAM_API;
 
-import com.fazecast.jSerialComm.SerialPort;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-
-import java.io.InputStream;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import ev3dev.sensors.slamtec.RPLidarA1;
+import ev3dev.sensors.slamtec.model.Scan;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LiDARService {
-    private final SerialPort serialPort;
-    private final BlockingQueue<String> dataQueue = new LinkedBlockingQueue<>();
+    private final RPLidarA1 lidar;
     private volatile boolean running = true;
+    // Global storage for the latest scan data (each measurement formatted as a JSON object)
+    private final List<String> globalScanData = new ArrayList<>();
 
     public LiDARService() {
-        serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
-        if (!serialPort.openPort()) {
-            throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
+        try {
+            // Create and initialize the RPLidarA1 instance (this starts the motor internally)
+            lidar = new RPLidarA1("/dev/ttyUSB0");
+            lidar.init();
+        } catch (Exception e) {
+            throw new RuntimeException("Error initializing RPLidar: " + e.getMessage(), e);
         }
-        serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 1000, 0);
-        serialPort.setBaudRate(115200);
-        startMotor();
-        startScan();
         startContinuousReading();
     }
 
-    private void startMotor() {
-        if (serialPort.isOpen()) {
-            serialPort.clearDTR(); // Starts the motor
-        } else {
-            throw new IllegalStateException("Cannot start motor without an open port");
-        }
-    }
-
-    private void startScan() {
-        if (serialPort.isOpen()) {
-            byte[] startScanCommand = {(byte) 0xA5, 0x20};
-            serialPort.writeBytes(startScanCommand, startScanCommand.length);
-        } else {
-            throw new IllegalStateException("Cannot start scan without an open port");
-        }
-    }
-
     private void startContinuousReading() {
-        new Thread(() -> {
-            try (InputStream inputStream = serialPort.getInputStream()) {
-                byte[] buffer = new byte[256];
-                while (running) {
-                    int numBytes = inputStream.read(buffer);
-                    if (numBytes > 0) {
-                        System.out.println("Received bytes: " + numBytes);
-                        processLiDARData(buffer, numBytes);
-                    } else {
-                        System.out.println("No data received...");
+        Thread scanThread = new Thread(() -> {
+            while (running) {
+                try {
+                    // Blocking call that returns a full 360° scan
+                    Scan scan = lidar.scan();
+                    List<String> scanData = new ArrayList<>();
+                    // Use a lambda to process each measurement without an explicit type declaration.
+                    scan.getDistances().forEach(measure -> {
+                        // The measurement object (as provided by the library) is expected to have
+                        // methods getQuality(), getAngle(), and getDistance()
+                        double angle = measure.getAngle();
+                        int distance = (int) measure.getDistance();
+                        String dataPoint = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
+                        scanData.add(dataPoint);
+                    });
+                    synchronized (globalScanData) {
+                        globalScanData.clear();
+                        globalScanData.addAll(scanData);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        }).start();
+        });
+        scanThread.setDaemon(true);
+        scanThread.start();
     }
 
-
-    private void processLiDARData(byte[] data, int length) {
-        for (int i = 0; i < length - 4; i += 5) {
-            if ((data[i] & 0x01) == 0) {
-                System.out.println("LiDAR data not valid: " + new String(data));
-            } else {
-                int rawAngle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
-                double angle = rawAngle / 64.0;
-                int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
-                if (distance > 0) {
-                    String message = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
-                    dataQueue.offer(message);
+    /**
+     * Returns the latest scan data as a JSON array string.
+     */
+    public synchronized String getLatestData() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        synchronized (globalScanData) {
+            for (int i = 0; i < globalScanData.size(); i++) {
+                sb.append(globalScanData.get(i));
+                if (i < globalScanData.size() - 1) {
+                    sb.append(",");
                 }
             }
         }
+        sb.append("]");
+        return sb.toString();
     }
 
-    public String getLatestData() {
-        return dataQueue.poll();
-    }
-
-    public void stopMotor() {
-        if (serialPort.isOpen()) {
-            serialPort.setDTR();
-        } else {
-            throw new IllegalStateException("Cannot stop motor without an open port");
-        }
-    }
-
+    /**
+     * Stops scanning and closes the lidar connection.
+     */
     public void close() {
         running = false;
-        stopMotor();
-        if (serialPort.isOpen()) {
-            serialPort.closePort();
+        try {
+            lidar.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
