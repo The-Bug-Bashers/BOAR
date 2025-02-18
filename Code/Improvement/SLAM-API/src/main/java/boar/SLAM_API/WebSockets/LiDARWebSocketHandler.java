@@ -17,26 +17,12 @@ public class LiDARWebSocketHandler extends TextWebSocketHandler {
             JsonNode jsonNode = objectMapper.readTree(message.getPayload());
             String command = jsonNode.get("command").asText();
 
-            switch (command) {
-                case "getLatestData":
-                    String latestData = lidarService.getLatestData();
-                    if (latestData != null) {
-                        session.sendMessage(new TextMessage(latestData));
-                    } else {
-                        session.sendMessage(new TextMessage("{\"message\": \"No new data available\"}"));
-                    }
-                    break;
-                case "dumpData":
-                    // On-demand full scan dump.
-                    String dumpData = lidarService.dumpData();
-                    if (dumpData != null && !dumpData.isEmpty()) {
-                        session.sendMessage(new TextMessage(dumpData));
-                    } else {
-                        session.sendMessage(new TextMessage("{\"message\": \"No scan data available\"}"));
-                    }
-                    break;
-                default:
-                    session.sendMessage(new TextMessage("{\"error\": \"Unknown command!\"}"));
+            // Only accept the "printLatestData" command
+            if ("printLatestData".equals(command)) {
+                String data = lidarService.getLatestData();
+                session.sendMessage(new TextMessage(data));
+            } else {
+                session.sendMessage(new TextMessage("{\"error\": \"Unknown command!\"}"));
             }
         } catch (Exception e) {
             session.sendMessage(new TextMessage("{\"error\": \"Internal server error: " + e.getMessage() + "\"}"));
