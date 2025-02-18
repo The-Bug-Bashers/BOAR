@@ -25,7 +25,7 @@
     </style>
 </head>
 <body>
-<textarea id="dataInput" placeholder="Paste LiDAR data here..."></textarea>
+<textarea id="dataInput" placeholder='Paste JSON LiDAR data here...'></textarea>
 <button onclick="drawLidarData()">Visualize Data</button>
 <canvas id="lidarCanvas"></canvas>
 
@@ -49,15 +49,20 @@
         ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Get input data
+        // Get input data and parse it as JSON
         const inputData = document.getElementById("dataInput").value;
-        const data = inputData.match(/\{(.*?)\}/g);
-        if (!data) return;
+        let data;
+        try {
+            data = JSON.parse(inputData);
+        } catch (e) {
+            console.error("Invalid JSON data", e);
+            return;
+        }
 
+        // Iterate over each data point
         data.forEach(point => {
-            const [angle, distance] = point.replace(/[{}]/g, "").split(";");
-            const angleDeg = parseFloat(angle.replace(",", ".")); // Convert comma to dot
-            const distanceCm = parseFloat(distance.replace(",", "."));
+            const angleDeg = parseFloat(point.angle);
+            const distanceCm = parseFloat(point.distance);
 
             if (!isNaN(angleDeg) && !isNaN(distanceCm)) {
                 const angleRad = (angleDeg * Math.PI) / 180; // Convert to radians

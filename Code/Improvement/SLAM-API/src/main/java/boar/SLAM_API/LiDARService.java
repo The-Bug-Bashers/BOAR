@@ -15,6 +15,9 @@ public class LiDARService {
     // Temporary storage for accumulating points until a full scan is complete
     private final List<String> currentScanData = new ArrayList<>();
 
+    // To help detect when a full scan has been completed via angle wrap-around
+    private double lastAngle = -1.0;
+
     public LiDARService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
         if (!serialPort.openPort()) {
@@ -95,13 +98,15 @@ public class LiDARService {
 
     /**
      * Process incoming LiDAR data.
-     * Assumes each measurement is 5 bytes and that the LSB of the first byte indicates the start of a new scan.
+     * Assumes each measurement is 5 bytes.
+     * Instead of solely relying on the new-scan flag, we detect the end of a full scan when the angle wraps around.
      */
     private void processLiDARData(byte[] data, int length) {
         // Process data in chunks of 5 bytes
         for (int i = 0; i <= length - 5; i += 5) {
-            // Determine if this measurement is marked as the start of a new scan.
+            // Use the isNewScan flag if needed (not used as the primary indicator here)
             boolean isNewScan = (data[i] & 0x01) == 1;
+
             int rawAngle = ((data[i + 2] & 0xFF) << 7) | ((data[i + 1] & 0xFF) >> 1);
             double angle = rawAngle / 64.0;
             int distance = ((data[i + 3] & 0xFF) | ((data[i + 4] & 0xFF) << 8));
@@ -109,12 +114,16 @@ public class LiDARService {
             // Only consider valid points (non-zero distance)
             if (distance > 0) {
                 String dataPoint = String.format("{\"angle\": %.2f, \"distance\": %d}", angle, distance);
-                // If a new scan is detected and we already have data accumulated,
-                // update the global scan data and clear the temporary storage.
-                if (isNewScan && !currentScanData.isEmpty()) {
+
+                // If we have already accumulated data and the current angle is less than the last,
+                // assume a full scan has completed.
+                if (lastAngle >= 0 && !currentScanData.isEmpty() && angle < lastAngle) {
+                    System.out.println("Scan complete. Points collected: " + currentScanData.size());
                     updateGlobalScanData();
                     clearCurrentScanData();
                 }
+                // Update the lastAngle and add the new data point.
+                lastAngle = angle;
                 addDataPoint(dataPoint);
             }
         }
