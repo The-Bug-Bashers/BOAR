@@ -5,7 +5,11 @@ import com.fazecast.jSerialComm.SerialPortTimeoutException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
+@Service
 public class LiDARService {
     private final SerialPort serialPort;
     private volatile boolean running = true;
@@ -18,7 +22,12 @@ public class LiDARService {
     // Holds the last processed angle (initially not set)
     private double lastAngle = -1;
 
-    public LiDARService() {
+    private final SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    public LiDARService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+        
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0");
         if (!serialPort.openPort()) {
             throw new RuntimeException("Error: LiDAR not detected on /dev/ttyUSB0!");
@@ -161,5 +170,14 @@ public class LiDARService {
         if (serialPort.isOpen()) {
             serialPort.closePort();
         }
+    }
+
+    private synchronized void updateGlobalScanData() {
+        globalScanData.clear();
+        globalScanData.addAll(currentScanData);
+        // Convert the global scan data to JSON
+        String latestDataJson = getLatestData();
+        // Send the updated data to all connected WebSocket clients
+        messagingTemplate.convertAndSend("/topic/lidarData", latestDataJson);
     }
 }
