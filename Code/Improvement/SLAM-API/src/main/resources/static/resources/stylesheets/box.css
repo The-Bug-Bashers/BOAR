@@ -4,7 +4,6 @@
 }
 .box {
     background-color: var(--modal-backround-color);
-    box-shadow: 0 0 110px #5a5b60;
     border-color: var(--modal-border-color);
     border-width: 3px;
     border-style: solid;
