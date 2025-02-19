@@ -4,6 +4,46 @@
 
     button {
         font-size: 0.7em;
-        margin: 0.3em;
+        margin: 0.3em auto;
+    }
+}
+
+#buttonsContainer {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+}
+
+#buttonsSelect {
+    margin-top: 1vh;
+    width: 100%;
+}
+
+#speedControlForm {
+    position: absolute;
+    display: flex;
+    align-items: center;
+
+    height: fit-content;
+    width: calc(30vmin - 1em);
+    border: 4px solid #8e8989;
+    border-radius: 8px;
+    padding: 1vmin;
+
+    #speedControlInput {
+        margin-left: 1vmin;
+        background-color: transparent;
+        width: calc(100% - 5vmin - 2em);
+        border: none;
+        outline: none;
+        color: white;
+    }
+
+    #speedControlSubmit {
+        position: absolute;
+        right: 1em;
+        width: 5vmin;
+        font-size: 0.5em;
     }
 }

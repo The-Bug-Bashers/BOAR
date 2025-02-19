@@ -12,7 +12,8 @@
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/lidar.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/buttons.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/select.css">
-        <script src="webSocket.js" defer></script>
+        <script src="resources/scripts/webSocket.js" defer></script>
+        <script src="resources/scripts/buttonSections.js" defer></script>
     </head>
     <body>
         <div id="header">
@@ -26,11 +27,14 @@
             <div class="box" id="buttons">
                 <h1>Buttons</h1>
                 <label>
-                    <select>
-                        <option>Option1</option>
+                    <select id="buttonsSelect">
+                        <option>Remote-Control</option>
                         <option>Option2</option>
                     </select>
                 </label>
+                <div id="buttonsContainer">
+                    <!-- Buttons get inserted here -->
+                </div>
             </div>
             <div class="box" id="lidar">
                 <h1>LiDAR</h1>
