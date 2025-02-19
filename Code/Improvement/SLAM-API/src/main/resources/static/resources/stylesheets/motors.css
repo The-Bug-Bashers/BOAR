@@ -1,15 +1,10 @@
 #motors {
-    z-index: 1;
-
-    position: fixed;
-    top: 2vmin;
-    right: 2vmin;
-
+    position: relative;
     width: 40vmin;
-    height: 43vmin;
+    height: 33vmin;
     text-align: center;
 }
 
 #motorsImage {
-    width: 40vmin;
+    width: 30vmin;
 }

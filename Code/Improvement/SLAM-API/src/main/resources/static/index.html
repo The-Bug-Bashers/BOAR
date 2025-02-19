@@ -14,28 +14,35 @@
         <script src="webSocket.js" defer></script>
     </head>
     <body>
-        <div id="header"><h1 id="headerText">i</h1><img src="resources/images/BOAR-logo-trans.png" id="logo" alt="BOAR logo"></div>
-        <div class="box" id="lidar">
-            <h1>LiDAR</h1>
-            <div id="lidarCanvas"></div>
+        <div id="header">
+            <h1 id="headerLogoText">i</h1><img src="resources/images/BOAR-logo-trans.png" id="logo" alt="BOAR logo">
+            <p id="headerText">improved Basic Obstacle Avoidance Robot<br>by Justus Dicker, Jannik Händel & Jakob Ricken</p>
         </div>
-        <div class="box" id="buttons">
-            <h1>Buttons</h1>
-            <button class="button">Refresh</button>
-            <button class="button">Start auto-refresh</button>
-            <button class="button">Stop auto-refresh</button>
-        </div>
-        <div class="box" id="motors">
-            <h1>Motors</h1>
-            <img src="resources/images/iBOAR-top-view.svg" alt="iBOAR top view" id="motorsImage">
-        </div>
-        <div id="console" class="box">
-            <h1>Console</h1>
-            <div id="consoleOutput"></div>
-            <form id="consoleTextField">
-                <input type="text" id="consoleInput" placeholder="Enter command here" autocomplete="off">
-                <button id="consoleSubmit" class="button">Send</button>
-            </form>
+        <div id="content">
+            <div class="box" id="buttons">
+                <h1>Buttons</h1>
+                <button class="button">Refresh</button>
+                <button class="button">Start auto-refresh</button>
+                <button class="button">Stop auto-refresh</button>
+            </div>
+            <div class="box" id="lidar">
+                <h1>LiDAR</h1>
+                <div id="lidarCanvas"></div>
+            </div>
+            <div id="rightColumn">
+                <div class="box" id="motors">
+                    <h1>Motors</h1>
+                    <img src="resources/images/iBOAR-top-view.svg" alt="iBOAR top view" id="motorsImage">
+                </div>
+                <div id="console" class="box">
+                    <h1>Console</h1>
+                    <div id="consoleOutput"></div>
+                    <form id="consoleTextField">
+                        <input type="text" id="consoleInput" placeholder="Enter command here" autocomplete="off">
+                        <button id="consoleSubmit" class="button">Send</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </body>
 </html>

@@ -1,9 +1,6 @@
 #buttons {
-    position: fixed;
-    left: 81vmin;
-    top: 14vh;
-    bottom: 2vmin;
-    width: 34vmin;
+    position: relative;
+    width: 30vmin;
 
     button {
         font-size: 0.7em;

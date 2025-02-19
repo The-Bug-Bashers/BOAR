@@ -1,14 +1,10 @@
 #lidar {
-    position: fixed;
-    left: 2vmin;
-    top: 14vh;
-    bottom: 2vmin;
+    position: relative;
     width: 71vmin;
     text-align: center;
 }
 
 #lidarCanvas {
-    position: absolute;
     margin-top: 1em;
     right: 1em;
     width: 71vmin;

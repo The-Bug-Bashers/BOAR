@@ -1,15 +1,12 @@
 #console {
-    z-index: 1;
-
-    position: fixed;
-    right: 2vmin;
+    position: relative;
     width: 40vmin;
-    bottom: 2vmin;
-    top: 50vmin;
+    height: 41vmin;
+    margin-top: auto;
 }
 
 #consoleOutput {
-    height: 32.5vh;
+    height: 29vh;
     overflow-y: auto;
     font-size: 2vmin;
 }
