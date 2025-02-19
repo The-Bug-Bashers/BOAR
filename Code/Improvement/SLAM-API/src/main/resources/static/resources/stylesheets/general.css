@@ -28,6 +28,10 @@ body {
         line-height: 10vmin;
         font-size: 8vmin;
     }
+    #headerButtons {
+        margin-left: 2vmin;
+        display: flex;
+    }
     #headerText {
         margin: 0 2vmin 0 auto;
         text-align: right;

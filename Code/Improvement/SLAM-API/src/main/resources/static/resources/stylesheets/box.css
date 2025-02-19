@@ -1,5 +1,6 @@
 :root {
     --modal-backround-color: #2b2d30;
+    --modal-backround-color-hover: #404145;
     --modal-border-color: #43454a;
 }
 .box {

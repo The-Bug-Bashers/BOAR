@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>iBOAR</title>
+        <title>iBOAR Control Panel</title>
         <link rel="icon" href="resources/images/BOAR-logo-trans.png">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/general.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/box.css">
@@ -11,19 +11,26 @@
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/motors.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/lidar.css">
         <link type="text/css" rel="stylesheet" href="resources/stylesheets/buttons.css">
+        <link type="text/css" rel="stylesheet" href="resources/stylesheets/select.css">
         <script src="webSocket.js" defer></script>
     </head>
     <body>
         <div id="header">
             <h1 id="headerLogoText">i</h1><img src="resources/images/BOAR-logo-trans.png" id="logo" alt="BOAR logo">
+            <div id="headerButtons">
+                <button class="button">Refresh</button><button class="button">Start auto-refresh</button><button class="button">Stop auto-refresh</button>
+            </div>
             <p id="headerText">improved Basic Obstacle Avoidance Robot<br>by Justus Dicker, Jannik Händel & Jakob Ricken</p>
         </div>
         <div id="content">
             <div class="box" id="buttons">
                 <h1>Buttons</h1>
-                <button class="button">Refresh</button>
-                <button class="button">Start auto-refresh</button>
-                <button class="button">Stop auto-refresh</button>
+                <label>
+                    <select>
+                        <option>Option1</option>
+                        <option>Option2</option>
+                    </select>
+                </label>
             </div>
             <div class="box" id="lidar">
                 <h1>LiDAR</h1>
