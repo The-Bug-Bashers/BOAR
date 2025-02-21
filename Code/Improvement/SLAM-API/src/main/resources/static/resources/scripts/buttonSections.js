@@ -4,10 +4,36 @@ function showButtons(mode) {
         case "Remote-Control":
             buttonsContainer.innerHTML = `
                 <h2>Directions</h2>
-                <button id="forwardButton" class="button">Forward</button>
-                <button id="backwardButton" class="button">Backward</button>
-                <button id="leftButton" class="button">Left</button>
-                <button id="rightButton" class="button">Right</button>
+                <div id="directionButtons">
+                    <div class="directionButtonPlusLabel">
+                        <label class="checkbox-container">
+                            <input class="custom-checkbox" checked="" type="checkbox" id="forwardCheckbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <p>Forward</p>
+                    </div>
+                    <div class="directionButtonPlusLabel">
+                        <label class="checkbox-container">
+                            <input class="custom-checkbox" checked="" type="checkbox" id="rightCheckbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <p>Right</p>
+                    </div>
+                    <div class="directionButtonPlusLabel">
+                        <label class="checkbox-container">
+                            <input class="custom-checkbox" checked="" type="checkbox" id="backwardCheckbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <p>Backward</p>
+                    </div>
+                    <div class="directionButtonPlusLabel">
+                        <label class="checkbox-container">
+                            <input class="custom-checkbox" checked="" type="checkbox" id="leftCheckbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <p>Left</p>
+                    </div>
+                </div>
                 <h2>Turn</h2>
                 <button id="turnLeftButton" class="button">left</button>
                 <button id="turnRightButton" class="button">right</button>
@@ -17,6 +43,10 @@ function showButtons(mode) {
                     <button id="speedControlSubmit" class="button">Send</button>
                 </form>
             `;
+            document.getElementById("forwardCheckbox").checked = false;
+            document.getElementById("rightCheckbox").checked = false;
+            document.getElementById("backwardCheckbox").checked = false;
+            document.getElementById("leftCheckbox").checked = false;
             break;
         default:
             buttonsContainer.innerHTML = "";
@@ -26,7 +56,7 @@ function showButtons(mode) {
 document.getElementById("buttonsSelect").value = "Please select";
 document.getElementById("buttonsSelect").addEventListener("change", (event) => {
     const mode = event.target.value;
-    sendMessage(`{"mode": "${mode}"}`);
+    sendMessage(`{"command": "changeMode", "mode": "${mode}"}`);
     showButtons(mode);
 });
 

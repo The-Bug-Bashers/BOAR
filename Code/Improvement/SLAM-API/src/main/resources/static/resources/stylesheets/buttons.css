@@ -4,20 +4,39 @@
 
     button {
         font-size: 0.7em;
-        margin: 0.3em auto;
+        margin: 0.3em 0;
+    }
+
+    h2 {
+        margin-bottom: 0;
     }
 }
 
 #buttonsContainer {
     flex-direction: column;
     align-items: center;
-    text-align: center;
+    text-align: left;
     justify-content: center;
 }
 
 #buttonsSelect {
     margin-top: 1vh;
     width: 100%;
+}
+
+#directionButtons {
+    width: 100%;
+    border-collapse: collapse;
+
+    p {
+        margin: 0; /* Remove default margins */
+        display: flex;
+        align-items: center; /* Center align text vertically */
+    }
+
+    .directionButtonPlusLabel {
+        display: flex;
+    }
 }
 
 #speedControlForm {
