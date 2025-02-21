@@ -27,7 +27,7 @@
 
 #define turnOuterWheelSpeed 255 // Speed for outer wheel during turns (PWM value 0-255)
 #define turnInnerWheelSpeed 250 // Speed for inner wheel during turns (PWM value 0-255)
-#define turn90DegreeDuration 625 // Time to complete a 90-degree turn (ms)
+#define turn90DegreeDuration 425 // Time to complete a 90-degree turn (ms)
 #define turn10DegreeDuration 110 // Time to complete a 10-degree turn (ms)
 
 
