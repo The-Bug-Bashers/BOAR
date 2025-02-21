@@ -9,7 +9,8 @@ function showButtons(mode) {
             document.getElementById("leftCheckbox").checked = false;
             break;
         case "Move-Motor":
-
+            buttonsContainer.innerHTML = getMoveMotorContent();
+            break;
         default:
             buttonsContainer.innerHTML = "";
     }
@@ -74,5 +75,25 @@ function getRemoteControlContent() {
             <input type="number" min="0" max="100" id="speedControlInput" placeholder="Enter speed here (%)" autocomplete="off">
             <button id="speedControlSubmit" class="button">Send</button>
         </form>
+    `;
+}
+
+function getMoveMotorContent() {
+    return `
+        <div class="radio-input">
+          <label>
+            <input type="radio" id="value-1" name="value-radio" value="value-1" />
+            <span>1</span>
+          </label>
+          <label>
+            <input type="radio" id="value-2" name="value-radio" value="value-2" />
+            <span>2</span>
+          </label>
+          <label>
+            <input type="radio" id="value-3" name="value-radio" value="value-3" />
+            <span>3</span>
+          </label>
+          <span class="selection"></span>
+        </div>
     `;
 }

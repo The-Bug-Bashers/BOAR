@@ -19,7 +19,7 @@
     justify-content: center;
 }
 
-#buttonsSelect {
+#buttonsSelect, #motorsSelect {
     margin-top: 1vh;
     width: 100%;
 }
@@ -65,4 +65,73 @@
         width: 5vmin;
         font-size: 0.5em;
     }
+}
+
+
+/* Radio buttons */
+
+.radio-input input {
+    display: none;
+}
+
+.radio-input {
+    --container_width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    background-color: var(--modal-backround-color);
+    color: #fff;
+    width: var(--container_width);
+    overflow: hidden;
+    border: 2px solid var(--modal-border-color);
+    box-sizing: border-box;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.radio-input label {
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+    font-weight: 600;
+    letter-spacing: -1px;
+    font-size: 14px;
+}
+
+.selection {
+    display: none;
+    position: absolute;
+    height: 101%;
+    width: calc(var(--container_width) / 3);
+    z-index: 0;
+    left: 0;
+    top: 0;
+    transition: 0.15s ease;
+}
+
+.radio-input label:has(input:checked) {
+    color: #000;
+}
+
+.radio-input label:has(input:checked) ~ .selection {
+    background-color: #ffe500;
+    display: inline-block;
+}
+
+.radio-input label:nth-child(1):has(input:checked) ~ .selection {
+    transform: translateX(calc(var(--container_width) * 0 / 3));
+}
+
+.radio-input label:nth-child(2):has(input:checked) ~ .selection {
+    transform: translateX(calc(var(--container_width) * 3 / 3));
+}
+
+.radio-input label:nth-child(3):has(input:checked) ~ .selection {
+    transform: translateX(calc(var(--container_width) * 6 / 3));
 }
