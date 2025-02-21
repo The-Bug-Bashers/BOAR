@@ -2,52 +2,14 @@ function showButtons(mode) {
     const buttonsContainer = document.getElementById("buttonsContainer");
     switch (mode) {
         case "Remote-Control":
-            buttonsContainer.innerHTML = `
-                <h2>Directions</h2>
-                <div id="directionButtons">
-                    <div class="directionButtonPlusLabel">
-                        <label class="checkbox-container">
-                            <input class="custom-checkbox" checked="" type="checkbox" id="forwardCheckbox">
-                            <span class="checkmark"></span>
-                        </label>
-                        <p>Forward</p>
-                    </div>
-                    <div class="directionButtonPlusLabel">
-                        <label class="checkbox-container">
-                            <input class="custom-checkbox" checked="" type="checkbox" id="rightCheckbox">
-                            <span class="checkmark"></span>
-                        </label>
-                        <p>Right</p>
-                    </div>
-                    <div class="directionButtonPlusLabel">
-                        <label class="checkbox-container">
-                            <input class="custom-checkbox" checked="" type="checkbox" id="backwardCheckbox">
-                            <span class="checkmark"></span>
-                        </label>
-                        <p>Backward</p>
-                    </div>
-                    <div class="directionButtonPlusLabel">
-                        <label class="checkbox-container">
-                            <input class="custom-checkbox" checked="" type="checkbox" id="leftCheckbox">
-                            <span class="checkmark"></span>
-                        </label>
-                        <p>Left</p>
-                    </div>
-                </div>
-                <h2>Turn</h2>
-                <button id="turnLeftButton" class="button">left</button>
-                <button id="turnRightButton" class="button">right</button>
-                <h2>Speed</h2>
-                <form id="speedControlForm">
-                    <input type="number" min="0" max="100" id="speedControlInput" placeholder="Enter speed here (%)" autocomplete="off">
-                    <button id="speedControlSubmit" class="button">Send</button>
-                </form>
-            `;
+            buttonsContainer.innerHTML = getRemoteControlContent();
             document.getElementById("forwardCheckbox").checked = false;
             document.getElementById("rightCheckbox").checked = false;
             document.getElementById("backwardCheckbox").checked = false;
             document.getElementById("leftCheckbox").checked = false;
             break;
+        case "Move-Motor":
+
         default:
             buttonsContainer.innerHTML = "";
     }
@@ -58,11 +20,59 @@ document.getElementById("buttonsSelect").addEventListener("change", (event) => {
     const mode = event.target.value;
     sendMessage(`{"command": "changeMode", "mode": "${mode}"}`);
     showButtons(mode);
+
+    const placeholder = document.getElementById("placeholder");
+    if (placeholder) {
+        placeholder.remove();
+    }
 });
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "w" || event.key === "W") {
         console.log("The 'w' key was pressed.");
-        // Add your logic here to handle the "w" key press
     }
 });
+
+function getRemoteControlContent() {
+    return `
+        <h2>Directions</h2>
+        <div id="directionButtons">
+            <div class="directionButtonPlusLabel">
+                <label class="checkbox-container">
+                    <input class="custom-checkbox" checked="" type="checkbox" id="forwardCheckbox">
+                    <span class="checkmark"></span>
+                </label>
+                <p>Forward</p>
+            </div>
+            <div class="directionButtonPlusLabel">
+                <label class="checkbox-container">
+                    <input class="custom-checkbox" checked="" type="checkbox" id="rightCheckbox">
+                    <span class="checkmark"></span>
+                </label>
+                <p>Right</p>
+            </div>
+            <div class="directionButtonPlusLabel">
+                <label class="checkbox-container">
+                    <input class="custom-checkbox" checked="" type="checkbox" id="backwardCheckbox">
+                    <span class="checkmark"></span>
+                </label>
+                <p>Backward</p>
+            </div>
+            <div class="directionButtonPlusLabel">
+                <label class="checkbox-container">
+                    <input class="custom-checkbox" checked="" type="checkbox" id="leftCheckbox">
+                    <span class="checkmark"></span>
+                </label>
+                <p>Left</p>
+            </div>
+        </div>
+        <h2>Turn</h2>
+        <button id="turnLeftButton" class="button">left</button>
+        <button id="turnRightButton" class="button">right</button>
+        <h2>Speed</h2>
+        <form id="speedControlForm">
+            <input type="number" min="0" max="100" id="speedControlInput" placeholder="Enter speed here (%)" autocomplete="off">
+            <button id="speedControlSubmit" class="button">Send</button>
+        </form>
+    `;
+}
