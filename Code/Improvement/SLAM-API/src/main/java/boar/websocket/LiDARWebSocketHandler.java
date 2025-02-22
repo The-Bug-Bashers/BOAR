@@ -1,11 +1,12 @@
-package boar.SLAM_API.WebSockets;
+package boar.websocket;
 
-import boar.SLAM_API.LiDARService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import boar.service.LiDARService;
 
 public class LiDARWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();

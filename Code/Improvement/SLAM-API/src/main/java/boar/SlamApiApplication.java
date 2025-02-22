@@ -1,4 +1,4 @@
-package boar.SLAM_API;
+package boar;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

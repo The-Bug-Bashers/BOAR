@@ -1,4 +1,4 @@
-package boar.SLAM_API;
+package boar.service;
 
 import ev3dev.sensors.slamtec.RPLidarA1;
 import ev3dev.sensors.slamtec.model.Scan;
