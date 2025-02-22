@@ -64,7 +64,6 @@ function executeCommand(command) {
 // Clears the console
 function clearConsole() {
     document.getElementById("consoleOutput").innerHTML = "";
-    showMessage("Console cleared.", true, false, true);
 }
 
 function showAvailableCommands() {
