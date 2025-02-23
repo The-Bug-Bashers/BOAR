@@ -31,19 +31,26 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
         if (lidarPort.openPort()) {
             System.out.println("LiDAR connected!");
 
-            // Send the start scan command (verify with your device's documentation)
-            byte[] scanCommand = {(byte) 0xA5, (byte) 0x20};
-            int bytesWritten = lidarPort.writeBytes(scanCommand, scanCommand.length);
-            if (bytesWritten != scanCommand.length) {
-                System.err.println("Failed to send scan command.");
+            boolean reversedMotorLogic = true;
+
+            if (reversedMotorLogic) {
+                System.out.println("Reversed motor control logic detected. Skipping start scan command.");
             } else {
-                System.out.println("Scan command sent successfully.");
+                // Standard command to start scanning (and motor) for most units.
+                byte[] scanCommand = {(byte) 0xA5, (byte) 0x20};
+                int bytesWritten = lidarPort.writeBytes(scanCommand, scanCommand.length);
+                if (bytesWritten != scanCommand.length) {
+                    System.err.println("Failed to send scan command.");
+                } else {
+                    System.out.println("Scan command sent successfully.");
+                }
             }
             startScanning();
         } else {
             System.err.println("Failed to open LiDAR port.");
         }
     }
+
 
 
     private void startScanning() {
