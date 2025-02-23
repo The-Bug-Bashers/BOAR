@@ -5,6 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.RaspiPin;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Set;
@@ -14,14 +21,25 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class LidarWebSocketHandler extends TextWebSocketHandler {
-    private static final String PORT_NAME = "/dev/ttyUSB0"; // Adjust this for your setup
+    private static final String PORT_NAME = "/dev/ttyUSB0"; // Adjust as needed
     private static final int BAUD_RATE = 115200;
     private SerialPort lidarPort;
     private ScheduledExecutorService executor;
     private ObjectMapper objectMapper = new ObjectMapper();
     private final Set<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
 
+    // Pi4J GPIO control for motor
+    private GpioController gpio;
+    private GpioPinDigitalOutput motorPin;
+
     public LidarWebSocketHandler() {
+        // Initialize GPIO for motor control
+        gpio = GpioFactory.getInstance();
+        // Provision the motor control pin (adjust the pin if needed)
+        // Set to LOW so that the motor spins.
+        motorPin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "MotorControl", PinState.LOW);
+        System.out.println("Motor control pin set to LOW. Motor should be spinning.");
+
         openLidar();
     }
 
@@ -30,32 +48,15 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
         lidarPort.setBaudRate(BAUD_RATE);
         if (lidarPort.openPort()) {
             System.out.println("LiDAR connected!");
-
-            boolean reversedMotorLogic = true;
-
-            if (reversedMotorLogic) {
-                System.out.println("Reversed motor control logic detected. Skipping start scan command.");
-            } else {
-                // Standard command to start scanning (and motor) for most units.
-                byte[] scanCommand = {(byte) 0xA5, (byte) 0x20};
-                int bytesWritten = lidarPort.writeBytes(scanCommand, scanCommand.length);
-                if (bytesWritten != scanCommand.length) {
-                    System.err.println("Failed to send scan command.");
-                } else {
-                    System.out.println("Scan command sent successfully.");
-                }
-            }
             startScanning();
         } else {
             System.err.println("Failed to open LiDAR port.");
         }
     }
 
-
-
     private void startScanning() {
         executor = Executors.newScheduledThreadPool(1);
-        // Wait 2 seconds before starting the scan to ensure LiDAR is functional
+        // Wait 2 seconds to ensure the LiDAR is functional
         executor.scheduleAtFixedRate(() -> {
             try {
                 if (lidarPort.bytesAvailable() > 0) {
@@ -106,9 +107,10 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
     public void stop() {
         if (executor != null) executor.shutdown();
         if (lidarPort != null) lidarPort.closePort();
+        if (gpio != null) gpio.shutdown();
     }
 
-    // Inner class to hold LiDAR data
+    // Inner class representing LiDAR data
     private static class LidarData {
         public int angle;
         public int distance;
