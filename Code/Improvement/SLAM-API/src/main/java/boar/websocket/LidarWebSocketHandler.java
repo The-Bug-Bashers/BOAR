@@ -56,7 +56,7 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
 
     private void startScanning() {
         executor = Executors.newScheduledThreadPool(1);
-        // Wait 2 seconds to ensure the LiDAR is functional
+        // Wait 5 seconds to ensure the LiDAR is functional
         executor.scheduleAtFixedRate(() -> {
             try {
                 if (lidarPort.bytesAvailable() > 0) {
@@ -69,7 +69,7 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, 2, 100, TimeUnit.MILLISECONDS);
+        }, 5, 100, TimeUnit.MILLISECONDS);
     }
 
     private void parseAndSendData(byte[] buffer) throws IOException {
