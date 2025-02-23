@@ -30,11 +30,21 @@ public class LidarWebSocketHandler extends TextWebSocketHandler {
         lidarPort.setBaudRate(BAUD_RATE);
         if (lidarPort.openPort()) {
             System.out.println("LiDAR connected!");
+
+            // Send the start scan command (verify with your device's documentation)
+            byte[] scanCommand = {(byte) 0xA5, (byte) 0x20};
+            int bytesWritten = lidarPort.writeBytes(scanCommand, scanCommand.length);
+            if (bytesWritten != scanCommand.length) {
+                System.err.println("Failed to send scan command.");
+            } else {
+                System.out.println("Scan command sent successfully.");
+            }
             startScanning();
         } else {
             System.err.println("Failed to open LiDAR port.");
         }
     }
+
 
     private void startScanning() {
         executor = Executors.newScheduledThreadPool(1);
